@@ -2,7 +2,7 @@
   "name": "@citypay/sdk-elements-test",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "next dev --experimental-https",
     "build": "next build --turbopack",
@@ -10,10 +10,10 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@citypay/sdk": "link:/Users/gary/git/citypay/apps/citypay-api/js/citypay-sdk/packages/facade",
-    "next": "15.5.4",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "@citypay/sdk": "2.0.2",
+    "next": "16.0.7",
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
