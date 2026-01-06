@@ -2,9 +2,10 @@
 'use client';
 
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {type HookState, useElementsRef, useElementsStatus} from './CityPayProvider';
+import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
 import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
+import {useCardElementContext} from "@/components/CardElementProvider";
 
 
 // extends CpeChangeState with access to the elements api
@@ -24,7 +25,7 @@ export function useCardElement(
     handlers?: CpeFormHandlers
 ) {
 
-    const elementsRef = useElementsRef();
+    const elementCtx = useCardElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -55,7 +56,7 @@ export function useCardElement(
             // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
             const initOptions = node ? { ...options, element: node as any } : options;
 
-            elementsRef.ensureElementRef(initOptions, setState)
+            elementCtx.ensureElement(initOptions, setState)
                 .then(ref => {
                     setElementsInstance(ref);
                 })
@@ -85,13 +86,18 @@ export function useCardElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementsRef, handlers]);
+    }, [providerStatus, providerError, options, elementCtx, handlers]);
 
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
         const {opts, api} = elementsInstance;
+
+        if(!opts) {
+            throw new Error('No opts provided');
+        }
+
         const {element} = opts;
         console.log('>>>> elementsInstance', element)
 
