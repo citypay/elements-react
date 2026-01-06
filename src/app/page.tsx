@@ -10,6 +10,8 @@ import {CardFieldsProvider, useCardFieldsContext} from "@/components/CardFieldsP
 import {FieldsReferences} from "@/components/useCardFields";
 import {CardFields} from "@/components/CardFields";
 import {CardForm} from "@/app/FieldsCardForm";
+import {ApplepayElementProvider} from "@/components/ApplepayProvider";
+import {ApplepayElement} from "@/components/ApplepayElement";
 
 const products = [
     {
@@ -597,12 +599,25 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                             }}
                         />
 
-
-
+                        {paymentMethod.id === 'apple' && <ApplepayElement
+                                                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
+                                                            onAuthoriseEnd={async () => {
+                                                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
+                                                                const intentId = await elementsCtx?.getPaymentIntentId()
+                                                                if (!intentId) throw new Error('intentId is required')
+                                                                console.log('Verifying intent ', intentId)
+                                                                const v = await elementsCtx?.verifyPaymentIntentAuth()
+                                                                console.log('Verified intent ', v)
+                                                                if (v && v.status === 'success') {
+                                                                    setPaymentComplete(`Payment authorised via ApplePay. Verified authorisation`)
+                                                                } else {
+                                                                    setPaymentError('Payment authorised via ApplePay. Could not Verify')
+                                                                }
+                                                            }}
+                                                            />}
+                        {paymentMethod.id === 'google' && <p>Google TODO</p>}
                         <div className={"text-green-800"}>{ paymentComplete }</div>
                         <div className={"text-red-800"}>{ paymentError }</div>
-                        {paymentMethod.id === 'apple' && <p>Apple TODO</p>}
-                        {paymentMethod.id === 'google' && <p>Google TODO</p>}
 
 
                     </div>
@@ -616,6 +631,8 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 export default function ExamplePage() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
+
+    const [applepayIdentifier, ] = useState<string>(`applepay-${Math.random().toPrecision(5)}`)
 
     useEffect(() => {
         fetch('/api/payment-session', {
@@ -648,11 +665,13 @@ export default function ExamplePage() {
                          middleware={{
                             verifyAuth: '/api/verify-auth'
                          }}>
+            <ApplepayElementProvider id={applepayIdentifier}>
             <CardElementProvider id={'cardform'} >
             <CardFieldsProvider id={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
             </CardFieldsProvider>
             </CardElementProvider>
+            </ApplepayElementProvider>
         </CityPayProvider>
     </>
 
