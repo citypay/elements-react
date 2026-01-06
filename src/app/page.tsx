@@ -2,9 +2,10 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
 import {useEffect, useState} from "react";
-import {CityPayProvider, useElement} from "@/components/CityPayProvider";
+import {CityPayProvider} from "@/components/CityPayProvider";
 import {CardElement} from "@/components/CardElement";
 import {PaymentIntentSession} from "@citypay/sdk";
+import {CardElementProvider, useCardElementContext} from "@/components/CardElementProvider";
 
 const products = [
     {
@@ -445,7 +446,7 @@ function CardForm() {
 
 export function FormExample({ paymentSession }: { paymentSession: PaymentIntentSession }) {
 
-    const elements = useElement('default');
+    const cardFormElementInstance = useCardElementContext().getElement()?.api;
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
     const [layout, setLayout] = useState<'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('column');
@@ -456,26 +457,26 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
     // There are 2 ways of registering error handlers
     // 1. as an event listener on the elements object
     useEffect(() => {
-        if (elements) {
-            elements.onError((err: any) => {
+        if (cardFormElementInstance) {
+            cardFormElementInstance.onError((err: any) => {
                 console.error('!!!! Error during payment processing:', err);
             });
         }
-    }, [elements]);
+    }, [cardFormElementInstance]);
 
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!elements) return; // not ready yet
+        if (!cardFormElementInstance) return; // not ready yet
 
         try {
             setIsSubmitting(true);
 
             // 1) Create a token from the mounted card element(s)
-            const tokenResult = await elements.tokenise();
+            const tokenResult = await cardFormElementInstance.tokenise();
             // console.log('>>> tokenResult:', tokenResult);
 
             // 2) Attach token to an intent (if your flow uses intents)
-            const attachResult = await elements.attach({
+            const attachResult = await cardFormElementInstance.attach({
                 token: tokenResult.token,
                 select: true,
                 intentId:  paymentSession.paymentIntentId
@@ -483,7 +484,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
             console.log('>>> attachResult:', attachResult);
 
             // 3) Confirm the payment (3DS may happen here)
-            const confirmResult = await elements.confirm({
+            const confirmResult = await cardFormElementInstance.confirm({
                 // intentId: attachResult.intentId, returnUrl: ...
             });
             console.log('>>> confirmResult:', confirmResult);
@@ -599,6 +600,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
                         <CardElement
                             key={layout}
+                            elementId={'cardform'}
                             visible={paymentMethod.id === 'credit-card'}
                             options={{
                                 language: 'en',
@@ -647,6 +649,8 @@ export default function ExamplePage() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                amount: 1000,
+                currency: 'GBP'
             })
         }).then(async (resp) => {
             if (resp.status === 200) {
@@ -666,7 +670,9 @@ export default function ExamplePage() {
                          createServerIntent={async () => {
                              return paymentSession;
                          }}>
-            <FormExample paymentSession={paymentSession} />
+            <CardElementProvider id={'cardform'} >
+                <FormExample paymentSession={paymentSession} />
+            </CardElementProvider>
         </CityPayProvider>
     </>
 
