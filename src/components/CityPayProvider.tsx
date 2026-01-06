@@ -11,23 +11,26 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import {CardElementOptions, CityPayElements, CityPayPromise, ElementsApi, PaymentIntentSession} from '@citypay/sdk';
+import {
+    AltPaymentOptions, CardElementOptions,
+    CardFieldsElementOptions,
+    CityPayElements,
+    CityPayPromise,
+    ElementsApi,
+    PaymentIntentSession
+} from '@citypay/sdk';
 
 type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error';
 export type HookState = 'el:idle' | 'el:creating' | 'el:mounting' | 'el:ready' | 'el:error';
 
-type ElementRefShape = {
-    getElementRef: (id: string) => ElementsInstance | undefined;
-    ensureElementRef: (opts: CardElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>;
-};
-
 // ---------- Context shape ----------
 type CityPayContextShape = {
     status: ProviderStatus;
-    elements: CityPayElements | null;
-    // payButton: PayButton | null;
     error?: unknown;
-} & ElementRefShape;
+    elements: CityPayElements | null;
+    elementInstances: Map<string, ElementsInstance>;
+    getElementInstance: (id: string) => ElementsInstance | undefined;
+}
 
 const CityPayContext = createContext<CityPayContextShape | null>(null);
 
@@ -40,7 +43,7 @@ type CityPayProviderProps = PropsWithChildren<{
 
 export type ElementsInstance = {
     api: ElementsApi;
-    opts: CardElementOptions;
+    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions;
 }
 
 function initPreconnect() {
@@ -168,38 +171,12 @@ export function CityPayProvider({
 
     const getElementRef = (id: string) => elementRefs.current.get(id);
 
-    /**
-     * Ensure an element is mounted and ready.
-     * @param opts
-     * @param h
-     */
-    const ensureElementRef = async (opts: CardElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
-        if (!elementsRef.current) throw new Error('Elements not ready');
-        // const existing = elementRefs.current.get(opts.id);
-        // if (existing) return existing;
-
-        // Create the form and push to the current refs..
-        const stableOpts = {
-            ...opts,
-            targetElement: opts.element,
-        }
-
-        h('el:creating');
-        const elementsApi = elementsRef.current.cardElement(stableOpts);
-        await elementsApi.init()
-        await elementsApi.awaitReady()
-        h("el:ready");
-        const ref = {api: elementsApi, opts: stableOpts};
-        elementRefs.current.set(opts.id, ref);
-        return ref;
-    };
-
     const value = useMemo<CityPayContextShape>(() => ({
         status,
         error,
         elements: elementsRef.current,
-        getElementRef,
-        ensureElementRef
+        elementInstances: elementRefs.current,
+        getElementInstance: getElementRef
     }), [status, error, elementsRef.current]);
 
     return (
@@ -211,28 +188,21 @@ export function CityPayProvider({
 
 
 // ---------- Hooks ----------
-export function useElements() {
+export function useElements(): CityPayElements | null {
     const ctx = useContext(CityPayContext);
     if (!ctx) throw new Error('useElements must be used within a <CityPayProvider>');
     console.log('useElements', ctx.status)
     return ctx.elements;
 }
 
+export function useElementInstances() {
+    const ctx = useContext(CityPayContext);
+    if (!ctx) throw new Error('useElements must be used within a <CityPayProvider>');
+    return ctx.elementInstances
+}
+
 export function useElementsStatus() {
     const ctx = useContext(CityPayContext);
     if (!ctx) throw new Error('useElementsStatus must be used within a <CityPayProvider>');
     return {status: ctx.status, error: ctx.error};
-}
-
-export function useElementsRef(): ElementRefShape {
-    const ctx = useContext(CityPayContext);
-    if (!ctx) throw new Error('useElementRef must be used within a <CityPayProvider>');
-    return {getElementRef: ctx.getElementRef, ensureElementRef: ctx.ensureElementRef};
-}
-
-export function useElement(id: string = 'default') {
-    const ctx = useContext(CityPayContext);
-    if (!ctx) throw new Error('useElement must be used within a <CityPayProvider>');
-    const inst = ctx.getElementRef(id);
-    return inst?.api ?? null; // ElementsApi | null
 }
