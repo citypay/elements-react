@@ -1,6 +1,6 @@
 'use client';
 
-import React, {useId, useRef} from 'react';
+import React from 'react';
 import {type CpeFormHandlers, useCardElement} from './useCardElement';
 import {type CardElementOptions} from "@citypay/sdk";
 import {useElementsStatus} from "@/components/CityPayProvider";
@@ -21,7 +21,7 @@ export const CardElement: React.FC<Props> = ({
                                                     visible = true,
                                                 }: Props) => {
     const id = elementId ?? 'default';
-    const {containerRef, state} = useCardElement(id, options, {onChange, onReady, onError})
+    const {containerRef} = useCardElement(id, options, {onChange, onReady, onError})
     const {status, error}  = useElementsStatus()
 
     if (status == 'cpp:initialising') {
@@ -41,5 +41,5 @@ export const CardElement: React.FC<Props> = ({
         </p> </>
     }
 
-    return <div style={{display: visible ? 'block' : 'none'}} id={`cp-form-${id}`} ref={containerRef}></div>
+    return <div style={{display: visible ? 'flex' : 'none', minHeight: '330px'}} id={`cp-form-${id}`} ref={containerRef}></div>
 }
