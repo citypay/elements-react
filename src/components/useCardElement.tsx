@@ -98,7 +98,7 @@ export function useCardElement(
             throw new Error('No opts provided');
         }
 
-        const {element} = opts;
+        const {element} = opts as CardElementOptions;
         console.log('>>>> elementsInstance', element)
 
         if (!element) {
