@@ -1,11 +1,15 @@
 'use client'
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {CityPayProvider} from "@/components/CityPayProvider";
 import {CardElement} from "@/components/CardElement";
 import {PaymentIntentSession} from "@citypay/sdk";
 import {CardElementProvider, useCardElementContext} from "@/components/CardElementProvider";
+import {CardFieldsProvider, useCardFieldsContext} from "@/components/CardFieldsProvider";
+import {FieldsReferences} from "@/components/useCardFields";
+import {CardFields} from "@/components/CardFields";
+import {CardForm} from "@/app/FieldsCardForm";
 
 const products = [
     {
@@ -377,113 +381,62 @@ function Delivery() {
     )
 }
 
+export function FormExample({paymentSession}: { paymentSession: PaymentIntentSession }) {
 
-function CardForm() {
-    return (
-        <div className="mt-6 grid grid-cols-4 gap-x-4 gap-y-6">
-            <div className="col-span-4">
-                <label htmlFor="card-number" className="block text-sm/6 font-medium text-gray-700">
-                    Card number
-                </label>
-                <div className="mt-2">
-                    <input
-                        id="card-number"
-                        name="card-number"
-                        type="text"
-                        autoComplete="cc-number"
-                        className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                    />
-                </div>
-            </div>
-
-            <div className="col-span-4">
-                <label htmlFor="name-on-card" className="block text-sm/6 font-medium text-gray-700">
-                    Name on card
-                </label>
-                <div className="mt-2">
-                    <input
-                        id="name-on-card"
-                        name="name-on-card"
-                        type="text"
-                        autoComplete="cc-name"
-                        className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                    />
-                </div>
-            </div>
-
-            <div className="col-span-3">
-                <label htmlFor="expiration-date"
-                       className="block text-sm/6 font-medium text-gray-700">
-                    Expiration date (MM/YY)
-                </label>
-                <div className="mt-2">
-                    <input
-                        id="expiration-date"
-                        name="expiration-date"
-                        type="text"
-                        autoComplete="cc-exp"
-                        className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                    />
-                </div>
-            </div>
-
-            <div>
-                <label htmlFor="cvc" className="block text-sm/6 font-medium text-gray-700">
-                    CVC
-                </label>
-                <div className="mt-2">
-                    <input
-                        id="cvc"
-                        name="cvc"
-                        type="text"
-                        autoComplete="csc"
-                        className="block w-full rounded-md bg-white px-3 py-2 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                    />
-                </div>
-            </div>
-        </div>)
-}
-
-export function FormExample({ paymentSession }: { paymentSession: PaymentIntentSession }) {
-
-    const cardFormElementInstance = useCardElementContext().getElement()?.api;
+    const cardElCtx = useCardElementContext();
+    const cardFieldsCtx = useCardFieldsContext();
+    const [cardFormComplete, setCardFormComplete] = useState(false);
+    const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
+    const fieldsRefs: FieldsReferences = {
+        csc: useRef(null),
+        expiry: useRef(null),
+        name: useRef(null),
+        pan: useRef(null)
 
-    // There are 2 ways of registering error handlers
-    // 1. as an event listener on the elements object
+    }
+
+    const getActiveApi = () =>
+        paymentMethod.id === "credit-card"
+            ? cardElCtx.getElement()?.api
+            : paymentMethod.id === "credit-card-form"
+                ? cardFieldsCtx.getElement()?.api
+                : undefined;
+
     useEffect(() => {
-        if (cardFormElementInstance) {
-            cardFormElementInstance.onError((err: any) => {
-                console.error('!!!! Error during payment processing:', err);
-            });
-        }
-    }, [cardFormElementInstance]);
+        setFormDisabled(!(cardFormComplete || cardFieldsComplete));
+    }, [cardFormComplete, cardFieldsComplete])
 
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!cardFormElementInstance) return; // not ready yet
+
+        const api = getActiveApi();
+        if (!api) {
+            console.warn(`Aborting submit as instances not ready`);
+            return;
+        } // not ready yet
 
         try {
             setIsSubmitting(true);
 
             // 1) Create a token from the mounted card element(s)
-            const tokenResult = await cardFormElementInstance.tokenise();
+            const tokenResult = await api.tokenise();
             // console.log('>>> tokenResult:', tokenResult);
 
             // 2) Attach token to an intent (if your flow uses intents)
-            const attachResult = await cardFormElementInstance.attach({
+            const attachResult = await api.attach({
                 token: tokenResult.token,
                 select: true,
-                intentId:  paymentSession.paymentIntentId
+                intentId: paymentSession.paymentIntentId
             });
             console.log('>>> attachResult:', attachResult);
 
             // 3) Confirm the payment (3DS may happen here)
-            const confirmResult = await cardFormElementInstance.confirm({
+            const confirmResult = await api.confirm({
                 // intentId: attachResult.intentId, returnUrl: ...
             });
             console.log('>>> confirmResult:', confirmResult);
@@ -498,7 +451,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        intentId:  paymentSession.paymentIntentId
+                        intentId: paymentSession.paymentIntentId
                     })
                 }).then(async (resp) => {
 
@@ -571,7 +524,48 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
 
                         </div>
 
-                        {paymentMethod.id === 'credit-card-form' && <CardForm/>}
+                        {paymentMethod.id === 'credit-card-form' &&
+                          <>
+                            <CardForm refs={fieldsRefs}/>
+                            <CardFields refs={fieldsRefs} options={{id: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan'}}
+                            onChange={(c) => {
+
+                                function updateField(
+                                    key: keyof typeof c,
+                                    wrapId: string,
+                                    labelId: string,
+                                    baseLabel: string
+                                ) {
+                                    const wrap = document.getElementById(wrapId)
+                                    const label = document.getElementById(labelId)
+                                    const field = c[key] as { message?: string; valid: boolean; requested: boolean; }
+                                    const isInvalid = field && !field.valid
+
+                                    if (wrap) {
+                                        wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"
+                                    }
+
+                                    if (label) {
+                                        label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel
+                                        label.style.color = isInvalid ? "red" : "#64748b"
+                                    }
+                                }
+
+                                updateField("csc", "csc-wrap", "csc-label", "CSC")
+                                updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")
+                                updateField("name", "name-wrap", "name-label", "Name on card")
+                                updateField("pan", "pan-wrap", "pan-label", "Card number")
+
+
+                                if (c.complete) {
+                                    console.log('CardFields complete')
+                                    setCardFieldsComplete(true)
+                                } else {
+                                    setCardFieldsComplete(false)
+                                }
+                            }}/>
+                        </>
+                        }
                         <CardElement
                             elementId={'cardform'}
                             visible={paymentMethod.id === 'credit-card'}
@@ -580,7 +574,9 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                                 console.log('>>>onChange', cs)
                                 if (cs.complete) {
                                     console.log('>>>complete')
-                                    setFormDisabled(false)
+                                    setCardFormComplete(true)
+                                } else {
+                                    setCardFormComplete(false)
                                 }
                             }}
                         />
@@ -634,7 +630,9 @@ export default function ExamplePage() {
                              return paymentSession;
                          }}>
             <CardElementProvider id={'cardform'} >
+            <CardFieldsProvider id={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
+            </CardFieldsProvider>
             </CardElementProvider>
         </CityPayProvider>
     </>
