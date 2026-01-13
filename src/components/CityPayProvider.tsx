@@ -17,7 +17,8 @@ import {
     CityPayElements,
     CityPayPromise,
     ElementsApi,
-    PaymentIntentSession
+    PaymentIntentSession,
+    MiddlewareConfig
 } from '@citypay/sdk';
 
 type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error';
@@ -38,6 +39,7 @@ const CityPayContext = createContext<CityPayContextShape | null>(null);
 type CityPayProviderProps = PropsWithChildren<{
     pubKey?: string;
     createServerIntent?: () => Promise<PaymentIntentSession>;
+    middleware?: MiddlewareConfig
     // payButtonConfig?: PayButtonConfig;    // optional → lazy-init supported
 }>;
 
@@ -79,6 +81,7 @@ function initPreconnect() {
 export function CityPayProvider({
                                     pubKey,
                                     createServerIntent,
+                                    middleware,
                                     children,
                                 }: CityPayProviderProps) {
 
@@ -149,6 +152,7 @@ export function CityPayProvider({
                         pubKey,
                         createServerIntent,
                         eager: true,
+                        middleware: middleware,
                     });
                     setStatus('cpp:ready');
                 }
