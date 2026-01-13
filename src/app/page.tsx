@@ -2,9 +2,9 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
 import {useEffect, useRef, useState} from "react";
-import {CityPayProvider} from "@/components/CityPayProvider";
+import {CityPayProvider, useElements} from "@/components/CityPayProvider";
 import {CardElement} from "@/components/CardElement";
-import {PaymentIntentSession} from "@citypay/sdk";
+import {PaymentIntentSession, VerifyAuthResponse} from "@citypay/sdk";
 import {CardElementProvider, useCardElementContext} from "@/components/CardElementProvider";
 import {CardFieldsProvider, useCardFieldsContext} from "@/components/CardFieldsProvider";
 import {FieldsReferences} from "@/components/useCardFields";
@@ -385,6 +385,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
     const cardElCtx = useCardElementContext();
     const cardFieldsCtx = useCardFieldsContext();
+    const elementsCtx = useElements()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
@@ -459,7 +460,22 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                     console.log(auth);
 
                     if (auth.authorised) {
-                        setPaymentComplete(`Payment authorised: ${auth.auth_code}`)
+                        setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Verifying auth...`)
+
+                        const intentId = await elementsCtx?.getPaymentIntentId()
+                        if (!intentId) throw new Error('intentId is required')
+                        console.log('Verifying intent ', intentId)
+                        const v: VerifyAuthResponse | undefined = await elementsCtx?.verifyPaymentIntentAuth()
+                        console.log('Verify intent result ', v)
+
+                        if (v && v.status === 'success') {
+                            setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Verified auth: ${v.auth.authcode}`)
+                        } else {
+                            setPaymentError(`Payment authorisation failed: ${auth.result_code}: ${auth.result_message}`)
+                        }
+
+                        setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Auth verification failed.`)
+
                     } else {
                         setPaymentError(`Payment authorisation failed: ${auth.result_code}: ${auth.result_message}`)
                     }
@@ -628,6 +644,9 @@ export default function ExamplePage() {
         <CityPayProvider pubKey={process.env.NEXT_PUBLIC_CITYPAY_PUB_KEY}
                          createServerIntent={async () => {
                              return paymentSession;
+                         }}
+                         middleware={{
+                            verifyAuth: '/api/verify-auth'
                          }}>
             <CardElementProvider id={'cardform'} >
             <CardFieldsProvider id={'cardfields'}>
