@@ -2,7 +2,7 @@ import {ElementsInstance, HookState, useElementInstances, useElements} from "@/c
 import {CardFieldsElementOptions} from "@citypay/sdk"
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 
-type CardFieldsContextShape = {
+export type CardFieldsContextShape = {
     getElement: () => ElementsInstance | null;
     ensureElement: (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
 }

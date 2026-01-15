@@ -5,21 +5,21 @@ import {type CpeFormHandlers, useCardElement} from './useCardElement';
 import {type CardElementOptions} from "@citypay/sdk";
 import {useElementsStatus} from "@/components/CityPayProvider";
 
-type Props = {
+export type CardElementProps = {
     elementId?: string;
     options?: Omit<CardElementOptions, 'id' | 'element'>;
     visible?: boolean;
 } & CpeFormHandlers;
 
 
-export const CardElement: React.FC<Props> = ({
+export const CardElement: React.FC<CardElementProps> = ({
                                                     elementId,
                                                     options,
                                                     onChange,
                                                     onReady,
                                                     onError,
                                                     visible = true,
-                                                }: Props) => {
+                                                }: CardElementProps) => {
     const id = elementId ?? 'default';
     const {containerRef} = useCardElement(id, options, {onChange, onReady, onError})
     const {status, error}  = useElementsStatus()

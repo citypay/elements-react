@@ -25,7 +25,7 @@ type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error
 export type HookState = 'el:idle' | 'el:creating' | 'el:mounting' | 'el:ready' | 'el:error';
 
 // ---------- Context shape ----------
-type CityPayContextShape = {
+export type CityPayContextShape = {
     status: ProviderStatus;
     error?: unknown;
     elements: CityPayElements | null;
@@ -36,7 +36,7 @@ type CityPayContextShape = {
 const CityPayContext = createContext<CityPayContextShape | null>(null);
 
 // ---------- Provider ----------
-type CityPayProviderProps = PropsWithChildren<{
+export type CityPayProviderProps = PropsWithChildren<{
     pubKey?: string;
     createServerIntent?: () => Promise<PaymentIntentSession>;
     middleware?: MiddlewareConfig
