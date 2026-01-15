@@ -1,24 +1,24 @@
 'use client';
 
-import React, {RefObject, useEffect, useId, useRef} from 'react';
-import {type CpeFormHandlers, useCardElement} from './useCardElement';
-import {type CardElementOptions, CardFieldsElementOptions} from "@citypay/sdk";
+import React from 'react';
+import {type CpeFormHandlers} from './useCardElement';
+import {CardFieldsElementOptions} from "@citypay/sdk";
 import {useElementsStatus} from "@/components/CityPayProvider";
 import {FieldsReferences, useCardFields} from "@/components/useCardFields";
 
-type Props = {
+export type CardFieldsProps = {
     refs: FieldsReferences;
     options: CardFieldsElementOptions;
 } & CpeFormHandlers;
 
 
-export const CardFields: React.FC<Props> = ({
+export const CardFields: React.FC<CardFieldsProps> = ({
                                                     refs,
                                                     options,
                                                     onChange,
                                                     onReady,
                                                     onError,
-                                                }: Props) => {
+                                                }: CardFieldsProps) => {
 
     useCardFields(refs, options, {onChange, onReady, onError})
     const {status, error}  = useElementsStatus()
