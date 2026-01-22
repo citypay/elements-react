@@ -34,3 +34,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## CityPay Elements flow
+
+This diagram shows how a payment session is created on the server,
+passed to the client, and used by CityPay Elements to securely collect
+and authorise card details.
+
+### Diagram
+![CityPay Elements flow](public/CityPay%20CardElement%20Flow.png)
