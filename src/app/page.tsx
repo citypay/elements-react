@@ -575,7 +575,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                             visible={paymentMethod.id === 'credit-card'}
                             options={{
                                 language: 'en',
-                                layout: 'row-minimal',
+                                layout: 'stack',
                                 width: '100%',
                                 height: '600px',
                                 theme: {
