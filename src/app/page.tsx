@@ -573,7 +573,19 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                         {paymentMethod.id === 'credit-card-form' && <CardForm/>}
                         <CardElement
                             visible={paymentMethod.id === 'credit-card'}
-                            options={{language: 'en', layout: 'stack'}}
+                            options={{
+                                language: 'en',
+                                layout: 'row-minimal',
+                                width: '100%',
+                                height: '600px',
+                                theme: {
+                                    '--cpe-input-bg': '#ffffff',        // input bg
+                                    '--cpe-fg': '#6b7280',              // labels/other text
+                                    '--cpe-input-border': '#767676',    // input border
+                                    '--cpe-border': '#767676',          // general border (optional)
+                                    '--cpe-radius': '6px',              // widget border radius
+                                }
+                            }}
                             onChange={async (cs) => {
                                 console.log('>>>onChange', cs)
                                 if (cs.complete) {
@@ -582,8 +594,6 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                                 }
                             }}
                         />
-
-
 
                         <div className={"text-green-800"}>{ paymentComplete }</div>
                         <div className={"text-red-800"}>{ paymentError }</div>

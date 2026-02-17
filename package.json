@@ -10,7 +10,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@citypay/sdk": "2.0.3",
+    "@citypay/sdk": "file:/users/eliserevillot/webstormprojects/citypay-sdk/packages/facade/dist",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1"
