@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {CityPay} from "@citypay/sdk";
+import {cityPayApiPost} from "@/lib/citypay-api";
 
 export async function POST(request: NextRequest) {
 
@@ -13,13 +13,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({error: "Missing required environment variables"}, {status: 500});
     }
 
-    const citypay = new CityPay(clientId, licenceKey, {
-        sandbox: true,
-    })
-
-    const result = await citypay.paymentIntents.authorise({
+    const result = await cityPayApiPost("intent/authorise", {
         payment_intent_id: intentId,
-    })
+    }, clientId, licenceKey)
 
     console.log(result)
 

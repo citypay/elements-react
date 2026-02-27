@@ -27,10 +27,11 @@ export async function POST() {
     try {
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            amount: 1001,
+            account_id: "123",
+            amount: 1003,
             currency: "GBP",
-            identifier: "your-cart-ref",
-            billTo: {
+            identifier: "your-cart-ref3",
+            bill_to: {
                 title: "Mr",
                 firstname: "N",
                 lastname: "Person",
@@ -48,7 +49,7 @@ export async function POST() {
         console.log("Payment intent created:", result);
         return NextResponse.json(result, {status: 200})
     } catch (e) {
-        // @ts-ignore
+        // @ts-expect-error meta is attached by SDK/runtime error objects.
         console.error("Error creating payment intent:", e, e?.meta);
         return NextResponse.json({error: "Failed to create payment intent"}, {status: 500});
     }

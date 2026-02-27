@@ -11,6 +11,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
+
 import {CardElementOptions, CityPayElements, CityPayPromise, ElementsApi, PaymentIntentSession} from '@citypay/sdk';
 
 type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error';
@@ -44,7 +45,7 @@ export type ElementsInstance = {
 }
 
 function initPreconnect() {
-    const ORIGIN = 'https://ui.elements.citypay.com';
+    const ORIGIN = 'https://dev.citypay.local:3001';
     const ensureLink = (rel: 'preconnect' | 'dns-prefetch', origin: string, extraAttrs?: Record<string, string>) => {
         const selector = `link[rel="${rel}"][href="${origin}"][data-citypay="true"]`;
         let link = document.head.querySelector<HTMLLinkElement>(selector);
@@ -134,9 +135,12 @@ export function CityPayProvider({
                      * src: 'https://dev.citypay.local:8080/loader/citypay.js',
                      *                         channel: 'local'
                      */
+
                     const api = await CityPayPromise({
-                        debug: true,
-                    });
+                        channel: 'local',
+                        src: 'https://dev.citypay.local:8080/loader/citypay.js',
+                        debug: false,
+                    })
 
                     if (cancelled) {
                         return;
@@ -185,7 +189,7 @@ export function CityPayProvider({
         }
 
         h('el:creating');
-        const elementsApi = elementsRef.current.cardElement(stableOpts);
+        const elementsApi = elementsRef.current.chakraElement(stableOpts);
         await elementsApi.init()
         await elementsApi.awaitReady()
         h("el:ready");

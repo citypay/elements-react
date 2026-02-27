@@ -35,6 +35,7 @@ const deliveryMethods = [
 const paymentMethods = [
     {id: 'credit-card', title: 'CCWidget'},
     {id: 'credit-card-form', title: 'CCForm'},
+    {id: 'chakra-form', title: 'Chakra'},
     {id: 'apple', title: 'ApplePay'},
     {id: 'google', title: 'GooglePay'},
 ]
@@ -443,6 +444,10 @@ function CardForm() {
         </div>)
 }
 
+function ChakraForm() {
+    return
+}
+
 export function FormExample({ paymentSession }: { paymentSession: PaymentIntentSession }) {
 
     const elements = useElement('default');
@@ -573,7 +578,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                         {paymentMethod.id === 'credit-card-form' && <CardForm/>}
                         <CardElement
                             visible={paymentMethod.id === 'credit-card'}
-                            options={{language: 'en', layout: 'stack'}}
+                            options={{language: 'en', layout: 'add'}}
                             onChange={async (cs) => {
                                 console.log('>>>onChange', cs)
                                 if (cs.complete) {
@@ -582,6 +587,8 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                                 }
                             }}
                         />
+
+                        {/*{paymentMethod.id === 'chakra-form' && <ChakraForm/>}*/}
 
 
 
@@ -616,7 +623,8 @@ export default function ExamplePage() {
         }).then(async (resp) => {
             if (resp.status === 200) {
                 const data = await resp.json()
-                setPaymentSession(data)
+                console.log("is this working?", data)
+                setPaymentSession(data) //todo needs to change after the  API reflects this change.
             }
         })
     }, []);

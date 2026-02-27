@@ -4,7 +4,7 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsRef, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
+import type {CardElementOptions, CpeChangeState, ElementsApi, ChakraElementOptions} from "@citypay/sdk";
 
 
 // extends CpeChangeState with access to the elements api
@@ -18,9 +18,11 @@ export type CpeFormHandlers = {
     onError?: (elements: ElementsApi | null, e: unknown) => void
 }
 
+export type ElementOptions = CardElementOptions | ChakraElementOptions;
+
 export function useCardElement(
     id: string,
-    baseOptions?: Omit<CardElementOptions, 'id' | 'element'>,
+    baseOptions?: Omit<ElementOptions , 'id' | 'element'>,
     handlers?: CpeFormHandlers
 ) {
 

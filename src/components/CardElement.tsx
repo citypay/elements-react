@@ -1,13 +1,13 @@
 'use client';
 
 import React, {useId, useRef} from 'react';
-import {type CpeFormHandlers, useCardElement} from './useCardElement';
+import {type CpeFormHandlers, ElementOptions, useCardElement} from './useCardElement';
 import {type CardElementOptions} from "@citypay/sdk";
 import {useElementsStatus} from "@/components/CityPayProvider";
 
 type Props = {
     elementId?: string;
-    options?: Omit<CardElementOptions, 'id' | 'element'>;
+    options?: Omit<ElementOptions, 'id' | 'element'>;
     visible?: boolean;
 } & CpeFormHandlers;
 
