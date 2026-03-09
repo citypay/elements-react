@@ -39,6 +39,7 @@ export function CardElementProvider({id, children}: PropsWithChildren<{id: strin
         h("el:ready");
         const ref = {api: elementsApi, opts: stableOpts};
         elementInstances.set(id, ref)
+        elementInstance.current = ref
         return ref;
     };
 

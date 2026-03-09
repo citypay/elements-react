@@ -20,7 +20,8 @@ export async function GET(_req: Request, { params }:{params: {intentId: string}}
     })
 
     const result = await citypay.paymentIntents.verifyAuthorised({
-        payment_intent_id: intentId,
+        unmask_fields: [],
+        payment_intent_id: intentId
     })
 
     console.log(result)
