@@ -39,7 +39,7 @@ export type ElementProviderContextShape<TSdkOpts extends MonoFrameElementOptions
     ) => Promise<ElementsInstance>;
 };
 
-export function ElementProvider<TSdkOpts extends MonoFrameElementOptions>(props: ElementProviderProps<TSdkOpts>) {
+function ElementProvider<TSdkOpts extends MonoFrameElementOptions>(props: ElementProviderProps<TSdkOpts>) {
 
     const Ctx = createContext<ElementProviderContextShape<TSdkOpts> | null>(null);
 
