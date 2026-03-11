@@ -1,100 +1,111 @@
 'use client';
 
-import {RefObject, useEffect, useMemo, useState} from 'react';
-import {type HookState, useElementsStatus} from './CityPayProvider';
-import type {ElementsInstance} from './CityPayProvider';
-import {CardFieldsElementOptions} from "@citypay/sdk";
-import {useCardFieldsContext} from "@/components/CardFieldsProvider";
-import {CpeFormHandlers} from "@/components/useCardElement";
+import { RefObject, useEffect, useMemo, useState } from "react";
+import { CardFieldsElementOptions } from "@citypay/sdk";
+import { addApiListeners, CpeApiEventListeners } from "@/components/Common";
+import {
+    ElementsInstance,
+    HookState,
+    useElementsStatus,
+} from "@/components/CityPayProvider";
+import { useCardFieldsContext } from "@/components/CardFieldsProvider";
 
 export type FieldsReferences = {
     csc: RefObject<HTMLElement | null>;
     expiry: RefObject<HTMLElement | null>;
     name: RefObject<HTMLElement | null>;
     pan: RefObject<HTMLElement | null>;
-}
+};
 
 export function useCardFields(
     refs: FieldsReferences,
     options: CardFieldsElementOptions,
-    handlers?: CpeFormHandlers
+    listeners?: CpeApiEventListeners
 ) {
-
     const elementCtx = useCardFieldsContext();
-    const {status: providerStatus, error: providerError} = useElementsStatus();
+    const { status: providerStatus } = useElementsStatus();
 
     const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
-    const [state, setState] = useState<HookState>('el:idle');
+    const [state, setState] = useState<HookState>("el:idle");
     const [error, setError] = useState<Error | string | null>(null);
 
+    const refsReady = Boolean(
+        refs.csc.current &&
+        refs.expiry.current &&
+        refs.name.current &&
+        refs.pan.current
+    );
+
+    const adaptedOptions = useMemo<CardFieldsElementOptions | null>(() => {
+        if (!refsReady) return null;
+
+        return {
+            ...options,
+            cscElement: refs.csc.current as HTMLElement,
+            expiryElement: refs.expiry.current as HTMLElement,
+            nameElement: refs.name.current as HTMLElement,
+            panElement: refs.pan.current as HTMLElement,
+        };
+    }, [
+        refsReady,
+        options,
+        refs.csc.current,
+        refs.expiry.current,
+        refs.name.current,
+        refs.pan.current,
+    ]);
+
     useEffect(() => {
-        if (providerStatus !== 'cpp:ready') return;
+        console.log(">>>> useCardFields main effect", providerStatus, adaptedOptions);
+        if (providerStatus !== "cpp:ready") return;
+        if (!adaptedOptions) return;
 
         let cancelled = false;
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-        const init = () => {
-            if (cancelled) return;
+        (async () => {
+            try {
+                setError(null);
 
-            const optsWithElements: CardFieldsElementOptions = {
-                ...options,
-                cscElement: refs.csc.current as HTMLElement,
-                expiryElement: refs.expiry.current as HTMLElement,
-                nameElement: refs.name.current as HTMLElement,
-                panElement: refs.pan.current as HTMLElement,
-            }
+                const ref = await elementCtx.ensureElement(adaptedOptions, setState);
 
-            elementCtx.ensureElement(optsWithElements, setState)
-                .then(ref => {
+                if (!cancelled) {
                     setElementsInstance(ref);
-                })
-                .catch((err: unknown) => {
-                    handlers?.onError?.(null, err);
-                });
-        };
+                }
+            } catch (err: unknown) {
+                if (!cancelled) {
+                    listeners?.onError?.(err);
+                    // setState("el:error");
+                    // setError(err instanceof Error ? err : String(err));
+                    console.error(err);
+                }
+            }
+        })();
 
-        if (!(Object.values(refs).every(r => r.current !== null))){
-            // Defer until after the ref attaches (commit phase)
-            timeoutId = setTimeout(init, 0);
-        } else {
-            init();
-        }
-
-        // void createAndMount();
         return () => {
             cancelled = true;
-            if (timeoutId) clearTimeout(timeoutId);
+
+            try {
+                elementsInstance?.api?.destroy?.();
+            } catch {}
+
+            setElementsInstance(undefined);
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementCtx, handlers]);
-
+    }, [providerStatus, adaptedOptions, elementCtx, listeners]);
 
     useEffect(() => {
-        if (!elementsInstance || !window) return;
+        if (!elementsInstance) return;
+        if (typeof window === "undefined") return;
 
-        const {opts, api} = elementsInstance;
+        addApiListeners(elementsInstance.api, listeners);
+    }, [elementsInstance, listeners]);
 
-        if(!opts) {
-            throw new Error('No opts provided');
-        }
-
-        if (handlers?.onChange) {
-            api.onChange(handlers.onChange);
-        }
-        if (handlers?.onReady) {
-            api.onReady(handlers.onReady)
-        }
-        if (handlers?.onError) {
-            api.onError(handlers.onError)
-        }
-
-    }, [elementsInstance, handlers?.onChange, handlers?.onError, handlers?.onReady])
-
-    const api = useMemo(() => ({
-        state,
-        error,
-    }), [state, error]);
-
-    return {...api};
+    return useMemo(
+        () => ({
+            state,
+            error,
+        }),
+        [state, error]
+    );
 }

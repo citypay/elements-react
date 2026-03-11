@@ -1,44 +1,48 @@
 'use client';
 
-import React from 'react';
-import {type CpeFormHandlers} from './useCardElement';
-import {CardFieldsElementOptions} from "@citypay/sdk";
-import {useElementsStatus} from "@/components/CityPayProvider";
-import {FieldsReferences, useCardFields} from "@/components/useCardFields";
+import React from "react";
+import { CardFieldsElementOptions } from "@citypay/sdk";
+import { useElementsStatus } from "@/components/CityPayProvider";
+import { CpeApiEventListeners } from "@/components/Common";
+import { FieldsReferences, useCardFields } from "@/components/useCardFields";
 
 export type CardFieldsProps = {
     refs: FieldsReferences;
     options: CardFieldsElementOptions;
-} & CpeFormHandlers;
+} & CpeApiEventListeners;
 
+export const CardFields: React.FC<CardFieldsProps> = (props: CardFieldsProps) => {
+    const { refs, options, ...resthandlers } = props;
 
-export const CardFields: React.FC<CardFieldsProps> = ({
-                                                    refs,
-                                                    options,
-                                                    onChange,
-                                                    onReady,
-                                                    onError,
-                                                }: CardFieldsProps) => {
+    const { status, error: providerError } = useElementsStatus();
 
-    useCardFields(refs, options, {onChange, onReady, onError})
-    const {status, error}  = useElementsStatus()
+    const { state: elementState, error: elementError } = useCardFields(refs, options, resthandlers);
 
-    if (status == 'cpp:initialising') {
-        return <>init...</>
+    if (status === "cpp:initialising") {
+        return <>init...</>;
     }
 
-    if (status == 'cpp:idle') {
-        return <>idle...</>
+    if (status === "cpp:idle") {
+        return <>idle...</>;
     }
 
-    if (status == 'cpp:error') {
-        return <>️<p className={"text-sm"}>
-
-            <span>Unable to render CityPay PaymentElement:</span>
-            <span className={"text-gray-700"}>{' ' + error}</span>
-
-        </p> </>
+    if (status === "cpp:error") {
+        return (
+            <p className="text-sm">
+                <span>Unable to render CityPay PaymentElement:</span>
+                <span className="text-gray-700">{" " + providerError}</span>
+            </p>
+        );
     }
 
-    return null
-}
+    if (elementState === "el:error") {
+        return (
+            <p className="text-sm">
+                <span>Unable to render CityPay PaymentElement:</span>
+                <span className="text-gray-700">{" " + elementError}</span>
+            </p>
+        );
+    }
+
+    return null;
+};

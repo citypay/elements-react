@@ -58,6 +58,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                         refs.name.current = e
                     }}
                     name="cardName"
+                    disabled={true}
                     type="text"
                     style={{...styles.inputBase, height: "100%"}}
                 />
@@ -78,6 +79,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                         refs.pan.current = e
                     }}
                     name="cardNumber"
+                    disabled={true}
                     type="text"
                     style={{...styles.inputBase, letterSpacing: ".06em"}}
                 />
@@ -100,6 +102,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                                 refs.expiry.current = e
                             }}
                             name="exp"
+                            disabled={true}
                             type="text"
                             style={styles.inputBase}
                         />
@@ -122,6 +125,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                                 refs.csc.current = e
                             }}
                             name="cvc"
+                            disabled={true}
                             type="text"
                             style={styles.inputBase}
                         />

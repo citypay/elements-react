@@ -1,60 +1,82 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
-import {CardFieldsElementOptions} from "@citypay/sdk"
-import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
+import {
+    createContext,
+    Dispatch,
+    PropsWithChildren,
+    SetStateAction,
+    useContext,
+    useMemo,
+    useRef,
+} from "react";
+import { CardFieldsElementOptions } from "@citypay/sdk";
+import {
+    ElementsInstance,
+    HookState,
+    useElementInstances,
+    useElements,
+} from "@/components/CityPayProvider";
 
 export type CardFieldsContextShape = {
     getElement: () => ElementsInstance | null;
-    ensureElement: (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
-}
+    ensureElement: (
+        opts: CardFieldsElementOptions,
+        setState: Dispatch<SetStateAction<HookState>>
+    ) => Promise<ElementsInstance>;
+};
 
 const CardFieldsContext = createContext<CardFieldsContextShape | null>(null);
 
-export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string}>) {
-
-    const elements = useElements()
-    const elementInstances = useElementInstances()
-
+export function CardFieldsProvider({
+                                       id,
+                                       children,
+                                   }: PropsWithChildren<{ id: string }>) {
+    const elements = useElements();
+    const elementInstances = useElementInstances();
     const elementInstance = useRef<ElementsInstance | null>(null);
 
-    /**
-     * Ensure a card fields element is mounted and ready.
-     * @param opts
-     * @param h
-     */
-    const ensureElement = async (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
-        if (!elements) throw new Error('Elements not ready');
-        // const existing = elementRefs.current.get(opts.id);
-        // if (existing) return existing;
+    const ensureElement = async (
+        opts: CardFieldsElementOptions,
+        setState: Dispatch<SetStateAction<HookState>>
+    ) => {
+        if (!elements) throw new Error("Elements not ready");
 
-        h('el:creating');
-        const elementsApi = elements.cardFieldsElement(opts)
-        console.log('>> init()')
-        await elementsApi.init()
-        console.log('>> await()')
-        await elementsApi.awaitReady()
-        console.log('>> done')
-        h("el:ready");
-        const ref = {api: elementsApi, opts: opts};
-        elementInstances.set(id, ref)
-        elementInstance.current = ref
+        const existing = elementInstance.current;
+        if (existing) return existing;
+
+        setState("el:creating");
+
+        const api = elements.cardFieldsElement(opts);
+        await api.init();
+        await api.awaitReady();
+
+        const ref = { api, opts };
+        elementInstances.set(id, ref);
+        elementInstance.current = ref;
+
+        setState("el:ready");
         return ref;
     };
 
-    const getElement = () => { return elementInstance.current }
+    const getElement = () => elementInstance.current;
 
-    const value = useMemo<CardFieldsContextShape>(() => ({
-        getElement: getElement,
-        ensureElement: ensureElement
-    }), [elements]);
+    const value = useMemo<CardFieldsContextShape>(
+        () => ({
+            getElement,
+            ensureElement,
+        }),
+        [elements]
+    );
 
     return (
-        <CardFieldsContext.Provider value={value}>{children}</CardFieldsContext.Provider>
-    )
-
+        <CardFieldsContext.Provider value={value}>
+            {children}
+        </CardFieldsContext.Provider>
+    );
 }
 
 export function useCardFieldsContext() {
     const ctx = useContext(CardFieldsContext);
-    if (!ctx) throw new Error('useCardElement must be used within an <CardElementContext>');
-    return ctx
+    if (!ctx) {
+        throw new Error("useCardFields must be used within a <CardFieldsProvider>");
+    }
+    return ctx;
 }

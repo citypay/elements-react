@@ -546,44 +546,50 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
                         {paymentMethod.id === 'credit-card-form' &&
                           <>
-                            {/*<CardForm refs={fieldsRefs}/>*/}
-                            {/*<CardFields refs={fieldsRefs} options={{id: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan'}}*/}
-                            {/*onChange={(c) => {*/}
+                            <CardForm refs={fieldsRefs}/>
+                            <CardFields refs={fieldsRefs} options={{
+                                identifier: 'cardfields',
+                                cscElement: '#cf-csc',
+                                expiryElement: '#cf-expiry',
+                                nameElement: '#cf-name',
+                                panElement: '#cf-pan',
+                                showCardIcon: false}}
+                            onChange={(c) => {
 
-                            {/*    function updateField(*/}
-                            {/*        key: keyof typeof c,*/}
-                            {/*        wrapId: string,*/}
-                            {/*        labelId: string,*/}
-                            {/*        baseLabel: string*/}
-                            {/*    ) {*/}
-                            {/*        const wrap = document.getElementById(wrapId)*/}
-                            {/*        const label = document.getElementById(labelId)*/}
-                            {/*        const field = c[key] as { message?: string; valid: boolean; requested: boolean; }*/}
-                            {/*        const isInvalid = field && !field.valid*/}
+                                function updateField(
+                                    key: keyof typeof c,
+                                    wrapId: string,
+                                    labelId: string,
+                                    baseLabel: string
+                                ) {
+                                    const wrap = document.getElementById(wrapId)
+                                    const label = document.getElementById(labelId)
+                                    const field = c[key] as { message?: string; valid: boolean; requested: boolean; }
+                                    const isInvalid = field && !field.valid
 
-                            {/*        if (wrap) {*/}
-                            {/*            wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"*/}
-                            {/*        }*/}
+                                    if (wrap) {
+                                        wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"
+                                    }
 
-                            {/*        if (label) {*/}
-                            {/*            label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel*/}
-                            {/*            label.style.color = isInvalid ? "red" : "#64748b"*/}
-                            {/*        }*/}
-                            {/*    }*/}
+                                    if (label) {
+                                        label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel
+                                        label.style.color = isInvalid ? "red" : "#64748b"
+                                    }
+                                }
 
-                            {/*    updateField("csc", "csc-wrap", "csc-label", "CSC")*/}
-                            {/*    updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")*/}
-                            {/*    updateField("name", "name-wrap", "name-label", "Name on card")*/}
-                            {/*    updateField("pan", "pan-wrap", "pan-label", "Card number")*/}
+                                updateField("csc", "csc-wrap", "csc-label", "CSC")
+                                updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")
+                                updateField("name", "name-wrap", "name-label", "Name on card")
+                                updateField("pan", "pan-wrap", "pan-label", "Card number")
 
 
-                            {/*    if (c.complete) {*/}
-                            {/*        console.log('CardFields complete')*/}
-                            {/*        setCardFieldsComplete(true)*/}
-                            {/*    } else {*/}
-                            {/*        setCardFieldsComplete(false)*/}
-                            {/*    }*/}
-                            {/*}}/>*/}
+                                if (c.complete) {
+                                    console.log('CardFields complete')
+                                    setCardFieldsComplete(true)
+                                } else {
+                                    setCardFieldsComplete(false)
+                                }
+                            }}/>
                         </>
                         }
                         {/*<CardElement*/}
