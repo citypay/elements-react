@@ -448,6 +448,7 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
     const elements = useElement('default');
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
+    const [layout, setLayout] = useState<'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('column');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
@@ -571,7 +572,33 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
                         </div>
 
                         {paymentMethod.id === 'credit-card-form' && <CardForm/>}
+                        <div className="mt-4 mb-4">
+                            <label htmlFor="layout-select" className="block text-sm font-medium text-gray-700">
+                                Widget Layout
+                            </label>
+                            <div className="mt-2 grid grid-cols-1">
+                                <select
+                                    id="layout-select"
+                                    value={layout}
+                                    onChange={(e) => setLayout(e.target.value as any)}
+                                    className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                >
+                                    <option value="stack">Stack</option>
+                                    <option value="row">Row</option>
+                                    <option value="row-compact">Row Compact</option>
+                                    <option value="row-minimal">Row Minimal</option>
+                                    <option value="column">Column</option>
+                                    <option value="column-compact">Column Compact</option>
+                                </select>
+                                <ChevronDownIcon
+                                    aria-hidden="true"
+                                    className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                />
+                            </div>
+                        </div>
+                        {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
                         <CardElement
+                            key={layout}
                             visible={paymentMethod.id === 'credit-card'}
                             options={{
                                 language: 'en',
@@ -620,8 +647,6 @@ export default function ExamplePage() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                amount: 1000,
-                currency: 'GBP'
             })
         }).then(async (resp) => {
             if (resp.status === 200) {
