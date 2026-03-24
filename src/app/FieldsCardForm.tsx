@@ -59,6 +59,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                     }}
                     name="cardName"
                     type="text"
+                    disabled={true}
                     style={{...styles.inputBase, height: "100%"}}
                 />
             </div>
@@ -79,6 +80,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                     }}
                     name="cardNumber"
                     type="text"
+                    disabled={true}
                     style={{...styles.inputBase, letterSpacing: ".06em"}}
                 />
             </div>
@@ -101,6 +103,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                             }}
                             name="exp"
                             type="text"
+                            disabled={true}
                             style={styles.inputBase}
                         />
                     </div>
@@ -123,6 +126,7 @@ export function CardForm({refs}: { refs: FieldsReferences }) {
                             }}
                             name="cvc"
                             type="text"
+                            disabled={true}
                             style={styles.inputBase}
                         />
                     </div>
