@@ -463,7 +463,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                     console.log(auth);
 
                     if (auth.authorised) {
-                        setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Verifying auth...`)
+                        setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verifying auth...`)
 
                         const intentId = await elementsCtx?.getPaymentIntentId()
                         if (!intentId) throw new Error('intentId is required')
@@ -472,15 +472,13 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         console.log('Verify intent result ', v)
 
                         if (v && v.status === 'success') {
-                            setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Verified auth: ${v.auth.authcode}`)
+                            setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verified auth: ${v.auth.authcode}`)
                         } else {
-                            setPaymentError(`Payment authorisation failed: ${auth.result_code}: ${auth.result_message}`)
+                            setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
                         }
 
-                        setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Auth verification failed.`)
-
                     } else {
-                        setPaymentError(`Payment authorisation failed: ${auth.result_code}: ${auth.result_message}`)
+                        setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
                     }
 
 
@@ -648,9 +646,9 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                                                 const v = await elementsCtx?.verifyPaymentIntentAuth()
                                                                 console.log('Verified intent ', v)
                                                                 if (v && v.status === 'success') {
-                                                                    setPaymentComplete(`Payment authorised via ApplePay. Verified authorisation`)
+                                                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
                                                                 } else {
-                                                                    setPaymentError('Payment authorised via ApplePay. Could not Verify')
+                                                                    setPaymentError(`Payment verification failed`)
                                                                 }
                                                             }}
                                                             />}
