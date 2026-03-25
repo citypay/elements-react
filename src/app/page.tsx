@@ -40,6 +40,22 @@ const paymentMethods = [
     {id: 'google', title: 'GooglePay'},
 ]
 
+export function HideNextDevIndicator() {
+    useEffect(() => {
+        const hide = () => {
+            const portal = document.querySelector('nextjs-portal') as any
+            const root = portal?.shadowRoot
+            root?.getElementById('devtools-indicator')?.remove()
+        }
+
+        hide()
+        const obs = new MutationObserver(hide)
+        obs.observe(document.documentElement, { childList: true, subtree: true })
+        return () => obs.disconnect()
+    }, [])
+
+    return null
+}
 
 function ContactInfo() {
     return (
@@ -63,6 +79,7 @@ function ContactInfo() {
         </div>
     )
 }
+
 
 function ShippingInfo() {
     return (
@@ -227,7 +244,7 @@ function ShippingInfo() {
     )
 }
 
-function OrderSummary({formDisabled}: { formDisabled: boolean }) {
+function OrderSummary({onBuyNowClick}: { onBuyNowClick: () => void }) {
 
     return (
         <>
@@ -321,11 +338,11 @@ function OrderSummary({formDisabled}: { formDisabled: boolean }) {
 
                     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                         <button
-                            type="submit"
-                            disabled={formDisabled}
-                            className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden disabled:opacity-50"
+                            type="button"
+                            onClick={onBuyNowClick}
+                            className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden"
                         >
-                            Confirm order
+                            Pay
                         </button>
                     </div>
                 </div>
@@ -451,9 +468,11 @@ function ChakraForm() {
 export function FormExample({ paymentSession }: { paymentSession: PaymentIntentSession }) {
 
     const elements = useElement('default');
+    const hidePaymentSelector = true;
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isCardPopupOpen, setIsCardPopupOpen] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
 
@@ -543,51 +562,39 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
             <div className="mx-auto max-w-2xl px-4 pt-16 pb-24 sm:px-6 lg:max-w-7xl lg:px-8">
                 <h2 className="sr-only">Checkout</h2>
 
-                <form className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16" onSubmit={submitHandler}>
+                <form id="checkout-form" className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16" onSubmit={submitHandler}>
                     <div>
 
                         <Delivery/>
 
-                        {/* Payment */}
-                        <div className="mt-10 border-t border-gray-200 pt-10">
-                            <h2 className="text-lg font-medium text-gray-900">Payment {formDisabled ? "DIS" : "EN"}</h2>
-                            <fieldset className="mt-4">
-                                <legend className="sr-only">Payment type</legend>
-                                <div className="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
-                                    {paymentMethods.map((pm) => (
-                                        <div key={pm.id} className="flex items-center">
-                                            <input
-                                                defaultChecked={pm.id === paymentMethod.id}
-                                                id={pm.id}
-                                                name="payment-type"
-                                                type="radio"
-                                                onChange={() => setPaymentMethod(pm)}
-                                                className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
-                                            />
-                                            <label htmlFor={pm.id}
-                                                   className="ml-3 block text-sm/6 font-medium text-gray-700">
-                                                {pm.title}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </fieldset>
-
-                        </div>
+                        {!hidePaymentSelector && (
+                            <div className="mt-10 border-t border-gray-200 pt-10">
+                                <h2 className="text-lg font-medium text-gray-900">Payment {formDisabled ? "DIS" : "EN"}</h2>
+                                <fieldset className="mt-4">
+                                    <legend className="sr-only">Payment type</legend>
+                                    <div className="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
+                                        {paymentMethods.map((pm) => (
+                                            <div key={pm.id} className="flex items-center">
+                                                <input
+                                                    defaultChecked={pm.id === paymentMethod.id}
+                                                    id={pm.id}
+                                                    name="payment-type"
+                                                    type="radio"
+                                                    onChange={() => setPaymentMethod(pm)}
+                                                    className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
+                                                />
+                                                <label htmlFor={pm.id}
+                                                       className="ml-3 block text-sm/6 font-medium text-gray-700">
+                                                    {pm.title}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </fieldset>
+                            </div>
+                        )}
 
                         {paymentMethod.id === 'credit-card-form' && <CardForm/>}
-                        <CardElement
-                            visible={paymentMethod.id === 'credit-card'}
-                            options={{language: 'en', layout: 'add'}}
-                            onChange={async (cs) => {
-                                console.log('>>>onChange', cs)
-                                if (cs.complete) {
-                                    console.log('>>>complete')
-                                    setFormDisabled(false)
-                                }
-                            }}
-                        />
-
                         {/*{paymentMethod.id === 'chakra-form' && <ChakraForm/>}*/}
 
 
@@ -599,8 +606,42 @@ export function FormExample({ paymentSession }: { paymentSession: PaymentIntentS
 
 
                     </div>
-                    <OrderSummary formDisabled={formDisabled}/>
+                    <OrderSummary onBuyNowClick={() => setIsCardPopupOpen(true)}/>
                 </form>
+
+                {isCardPopupOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                        <div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-lg">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-medium text-gray-900"></h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCardPopupOpen(false)}
+                                    className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
+
+                            <div className="mt-4">
+                                <CardElement
+                                    visible={paymentMethod.id === 'credit-card'}
+                                    options={{language: 'en', layout: 'add'}}
+                                    onChange={async (cs) => {
+                                        console.log('>>>onChange', cs)
+                                        if (cs.complete) {
+                                            console.log('>>>complete')
+                                            setFormDisabled(false)
+                                        } else {
+                                            setFormDisabled(true)
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -639,6 +680,7 @@ export default function ExamplePage() {
                          createServerIntent={async () => {
                              return paymentSession;
                          }}>
+            <HideNextDevIndicator/>
             <FormExample paymentSession={paymentSession} />
         </CityPayProvider>
     </>
