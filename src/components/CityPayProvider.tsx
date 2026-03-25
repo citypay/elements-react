@@ -134,8 +134,8 @@ export function CityPayProvider({
                      * src: 'https://dev.citypay.local:8080/loader/citypay.js',
                      *                         channel: 'local'
                      */
-                    const api = await CityPayPromise({
-                        debug: true,
+                     const api = await CityPayPromise({
+                         debug: false,
                     });
 
                     if (cancelled) {
