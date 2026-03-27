@@ -595,7 +595,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         </>
                         }
                         {paymentMethod.id === 'credit-card' && (
-                            <div className="mt-4 mb-4">
+                            <div className="mt-4 mb-8">
                                 <label htmlFor="layout-select" className="block text-sm font-medium text-gray-700">
                                     Widget Layout
                                 </label>
