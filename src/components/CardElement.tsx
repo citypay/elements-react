@@ -41,5 +41,5 @@ export const CardElement: React.FC<CardElementProps> = ({
         </p> </>
     }
 
-    return <div style={{display: visible ? 'flex' : 'none', minHeight: '330px'}} id={`cp-form-${id}`} ref={containerRef}></div>
+    return <div style={{width: '100%'}} id={`cp-form-${id}`} ref={containerRef}></div>
 }

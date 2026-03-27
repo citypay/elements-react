@@ -392,10 +392,12 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
-    const [layout, setLayout] = useState<'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('column');
+    const [layout, setLayout] = useState<'stack' | 'stack-compact' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('stack');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
+    const [cardElementNonce, setCardElementNonce] = useState(0);
+    const cardElementId = `cardform-${layout}-${cardElementNonce}`;
     const fieldsRefs: FieldsReferences = {
         csc: useRef(null),
         expiry: useRef(null),
@@ -410,6 +412,15 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
             : paymentMethod.id === "credit-card-form"
                 ? cardFieldsCtx.getElement()?.api
                 : undefined;
+
+    const selectPaymentMethod = (pm: typeof paymentMethods[number]) => {
+        setPaymentMethod(pm);
+        setCardFormComplete(false);
+
+        if (pm.id === 'credit-card') {
+            setCardElementNonce((n) => n + 1);
+        }
+    };
 
     useEffect(() => {
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
@@ -523,11 +534,11 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                     {paymentMethods.map((pm) => (
                                         <div key={pm.id} className="flex items-center">
                                             <input
-                                                defaultChecked={pm.id === paymentMethod.id}
+                                                checked={pm.id === paymentMethod.id}
                                                 id={pm.id}
                                                 name="payment-type"
                                                 type="radio"
-                                                onChange={() => setPaymentMethod(pm)}
+                                                onChange={() => selectPaymentMethod(pm)}
                                                 className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
                                             />
                                             <label htmlFor={pm.id}
@@ -583,58 +594,65 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                             }}/>
                         </>
                         }
-                        <div className="mt-4 mb-4">
-                            <label htmlFor="layout-select" className="block text-sm font-medium text-gray-700">
-                                Widget Layout
-                            </label>
-                            <div className="mt-2 grid grid-cols-1">
-                                <select
-                                    id="layout-select"
-                                    value={layout}
-                                    onChange={(e) => setLayout(e.target.value as any)}
-                                    className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                                >
-                                    <option value="stack">Stack</option>
-                                    <option value="row">Row</option>
-                                    <option value="row-compact">Row Compact</option>
-                                    <option value="row-minimal">Row Minimal</option>
-                                    <option value="column">Column</option>
-                                    <option value="column-compact">Column Compact</option>
-                                </select>
-                                <ChevronDownIcon
-                                    aria-hidden="true"
-                                    className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
-                                />
+                        {paymentMethod.id === 'credit-card' && (
+                            <div className="mt-4 mb-8">
+                                <label htmlFor="layout-select" className="block text-sm font-medium text-gray-700">
+                                    Widget Layout
+                                </label>
+                                <div className="mt-2 grid grid-cols-1">
+                                    <select
+                                        id="layout-select"
+                                        value={layout}
+                                        onChange={(e) => {
+                                            setLayout(e.target.value as any)
+                                            setCardFormComplete(false)
+                                            setCardElementNonce((n) => n + 1)
+                                        }}
+                                        className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                    >
+                                        <option value="stack">Stack</option>
+                                        <option value="stack-compact">Stack Compact</option>
+                                        <option value="row">Row</option>
+                                        <option value="row-compact">Row Compact</option>
+                                        <option value="row-minimal">Row Minimal</option>
+                                        <option value="column">Column</option>
+                                        <option value="column-compact">Column Compact</option>
+                                    </select>
+                                    <ChevronDownIcon
+                                        aria-hidden="true"
+                                        className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
-                        <CardElement
-                            key={layout}
-                            elementId={'cardform'}
-                            visible={paymentMethod.id === 'credit-card'}
-                            options={{
-                                language: 'en',
-                                layout: 'stack',
-                                width: '100%',
-                                height: '600px',
-                                theme: {
-                                    '--cpe-input-bg': '#ffffff',        // input bg
-                                    '--cpe-fg': '#6b7280',              // labels/other text
-                                    '--cpe-input-border': '#767676',    // input border
-                                    '--cpe-border': '#767676',          // general border (optional)
-                                    '--cpe-radius': '6px',              // widget border radius
-                                }
-                            }}
-                            onChange={async (cs) => {
-                                console.log('>>>onChange', cs)
-                                if (cs.complete) {
-                                    console.log('>>>complete')
-                                    setCardFormComplete(true)
-                                } else {
-                                    setCardFormComplete(false)
-                                }
-                            }}
-                        />
+                        {paymentMethod.id === 'credit-card' && (
+                            <CardElement
+                                key={cardElementId}
+                                elementId={cardElementId}
+                                options={{
+                                    language: 'en',
+                                    layout: layout,
+                                    width: '100%',
+                                    theme: {
+                                        '--cpe-input-bg': '#ffffff',        // input bg
+                                        '--cpe-fg': '#6b7280',              // labels/other text
+                                        '--cpe-input-border': '#767676',    // input border
+                                        '--cpe-border': '#767676',          // general border (optional)
+                                        '--cpe-radius': '6px',              // widget border radius
+                                    }
+                                }}
+                                onChange={async (cs) => {
+                                    console.log('>>>onChange', cs)
+                                    if (cs.complete) {
+                                        console.log('>>>complete')
+                                        setCardFormComplete(true)
+                                    } else {
+                                        setCardFormComplete(false)
+                                    }
+                                }}
+                            />
+                        )}
 
                         {paymentMethod.id === 'apple' && <ApplepayElement
                                                             options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
