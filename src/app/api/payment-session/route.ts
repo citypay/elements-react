@@ -29,7 +29,7 @@ export async function POST() {
             merchantid: Number(mid),
             amount: 1001,
             currency: "GBP",
-            identifier: "your-cart-ref",
+            identifier: `cart-id-${crypto.randomUUID()}`,
             billTo: {
                 title: "Mr",
                 firstname: "N",

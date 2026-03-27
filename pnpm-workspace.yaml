@@ -4,3 +4,6 @@ ignoredBuiltDependencies:
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
+
+packages:
+  - "."
