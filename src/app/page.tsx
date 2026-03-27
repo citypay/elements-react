@@ -413,6 +413,15 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                 ? cardFieldsCtx.getElement()?.api
                 : undefined;
 
+    const selectPaymentMethod = (pm: typeof paymentMethods[number]) => {
+        setPaymentMethod(pm);
+        setCardFormComplete(false);
+
+        if (pm.id === 'credit-card') {
+            setCardElementNonce((n) => n + 1);
+        }
+    };
+
     useEffect(() => {
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
     }, [cardFormComplete, cardFieldsComplete])
@@ -525,11 +534,11 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                     {paymentMethods.map((pm) => (
                                         <div key={pm.id} className="flex items-center">
                                             <input
-                                                defaultChecked={pm.id === paymentMethod.id}
+                                                checked={pm.id === paymentMethod.id}
                                                 id={pm.id}
                                                 name="payment-type"
                                                 type="radio"
-                                                onChange={() => setPaymentMethod(pm)}
+                                                onChange={() => selectPaymentMethod(pm)}
                                                 className="relative size-4 appearance-none rounded-full border border-gray-300 bg-white before:absolute before:inset-1 before:rounded-full before:bg-white not-checked:before:hidden checked:border-indigo-600 checked:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:before:bg-gray-400 forced-colors:appearance-auto forced-colors:before:hidden"
                                             />
                                             <label htmlFor={pm.id}
