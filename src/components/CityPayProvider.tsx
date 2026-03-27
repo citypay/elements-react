@@ -18,7 +18,6 @@ import {
     CityPayPromise,
     ElementsApi,
     PaymentIntentSession,
-    MiddlewareConfig
 } from '@citypay/sdk';
 
 type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error';
@@ -39,7 +38,30 @@ const CityPayContext = createContext<CityPayContextShape | null>(null);
 export type CityPayProviderProps = PropsWithChildren<{
     pubKey?: string;
     createServerIntent?: () => Promise<PaymentIntentSession>;
-    middleware?: MiddlewareConfig
+    middleware?: {
+        /**
+         * Middleware route for attaching a payment method or token.
+         */
+        attach?: string;
+
+        /**
+         * Middleware route for confirming a payment intent.
+         */
+        confirm?: string;
+
+        /**
+         * Middleware route for authorising a payment intent.
+         * Strongly recommended to always provide this.
+         */
+        authorise?: string;
+
+        /**
+         * Middleware route for verifying the authorisation
+         * of a payment intent.
+         * Strongly recommended to always provide this.
+         */
+        verifyAuth?: string;
+    };
     // payButtonConfig?: PayButtonConfig;    // optional → lazy-init supported
 }>;
 

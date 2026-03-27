@@ -15,5 +15,4 @@ export type {
     CityPayElements,
     ElementsApi,
     PaymentIntentSession,
-    MiddlewareConfig
 } from '@citypay/sdk'
