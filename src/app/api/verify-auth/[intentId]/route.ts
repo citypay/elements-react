@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {CityPay} from "@citypay/sdk";
 
-export async function GET(_req: Request, { params }:{params: {intentId: string}}) {
+export async function GET(_req: Request, { params }:{params: Promise<{ intentId: string }>}) {
 
     console.log('<> verify-auth')
 
