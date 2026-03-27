@@ -617,32 +617,33 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                             </div>
                         )}
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
-                        <CardElement
-                            key={cardElementId}
-                            elementId={cardElementId}
-                            visible={paymentMethod.id === 'credit-card'}
-                            options={{
-                                language: 'en',
-                                layout: layout,
-                                width: '100%',
-                                theme: {
-                                    '--cpe-input-bg': '#ffffff',        // input bg
-                                    '--cpe-fg': '#6b7280',              // labels/other text
-                                    '--cpe-input-border': '#767676',    // input border
-                                    '--cpe-border': '#767676',          // general border (optional)
-                                    '--cpe-radius': '6px',              // widget border radius
-                                }
-                            }}
-                            onChange={async (cs) => {
-                                console.log('>>>onChange', cs)
-                                if (cs.complete) {
-                                    console.log('>>>complete')
-                                    setCardFormComplete(true)
-                                } else {
-                                    setCardFormComplete(false)
-                                }
-                            }}
-                        />
+                        {paymentMethod.id === 'credit-card' && (
+                            <CardElement
+                                key={cardElementId}
+                                elementId={cardElementId}
+                                options={{
+                                    language: 'en',
+                                    layout: layout,
+                                    width: '100%',
+                                    theme: {
+                                        '--cpe-input-bg': '#ffffff',        // input bg
+                                        '--cpe-fg': '#6b7280',              // labels/other text
+                                        '--cpe-input-border': '#767676',    // input border
+                                        '--cpe-border': '#767676',          // general border (optional)
+                                        '--cpe-radius': '6px',              // widget border radius
+                                    }
+                                }}
+                                onChange={async (cs) => {
+                                    console.log('>>>onChange', cs)
+                                    if (cs.complete) {
+                                        console.log('>>>complete')
+                                        setCardFormComplete(true)
+                                    } else {
+                                        setCardFormComplete(false)
+                                    }
+                                }}
+                            />
+                        )}
 
                         {paymentMethod.id === 'apple' && <ApplepayElement
                                                             options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
