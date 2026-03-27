@@ -1,16 +1,41 @@
 {
   "name": "@citypay/sdk-elements-test",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "packageManager": "pnpm@10.24.0",
   "scripts": {
     "dev": "next dev --experimental-https",
-    "build": "next build --turbopack",
+    "build:dev": "next build --turbopack",
+
+    "build:lib": "tsup",
+    "prepack": "pnpm build:lib",
+
     "start": "next start",
     "lint": "eslint"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
   "dependencies": {
-    "@citypay/sdk": "2.0.3",
+    "@citypay/sdk": "2.0.5",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1"
@@ -25,6 +50,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
+    "tsup": "^8.0.0",
     "typescript": "^5"
   }
 }
