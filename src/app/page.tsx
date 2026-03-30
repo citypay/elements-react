@@ -640,7 +640,8 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         '--cpe-input-border': '#767676',    // input border
                                         '--cpe-border': '#767676',          // general border (optional)
                                         '--cpe-radius': '6px',              // widget border radius
-                                    }
+                                    },
+                                    cardSchemesDisplay: 'dynamic-inline'
                                 }}
                                 onChange={async (cs) => {
                                     console.log('>>>onChange', cs)
