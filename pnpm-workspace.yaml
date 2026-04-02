@@ -6,4 +6,6 @@ onlyBuiltDependencies:
   - '@tailwindcss/oxide'
 
 packages:
-  - "."
+  - "./packages/demo-react"
+  - "./packages/demo-server"
+  - "./packages/lib"

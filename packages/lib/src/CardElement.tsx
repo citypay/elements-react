@@ -3,7 +3,7 @@
 import React from 'react';
 import {type CpeFormHandlers, useCardElement} from './useCardElement';
 import {type CardElementOptions} from "@citypay/sdk";
-import {useElementsStatus} from "@/components/CityPayProvider";
+import {useElementsStatus} from "@/CityPayProvider";
 
 export type CardElementProps = {
     elementId?: string;

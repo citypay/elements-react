@@ -1,0 +1,50 @@
+{
+  "name": "@citypay/elements-react",
+  "version": "0.1.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@10.24.0",
+  "scripts": {
+    "clean": "rimraf dist dist-types",
+    "build": "tsup",
+    "prepack": "pnpm build",
+    "lint": "eslint"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "dependencies": {
+    "@citypay/sdk": "2.0.5"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.4",
+    "rimraf": "^6.1.3",
+    "tsup": "^8.0.0",
+    "typescript": "^5"
+  }
+}

@@ -1,4 +1,4 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
+import {ElementsInstance, HookState, useElementInstances, useElements} from "@/CityPayProvider";
 import {CardElementOptions} from '@citypay/sdk';
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 

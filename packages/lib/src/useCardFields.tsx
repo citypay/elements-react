@@ -4,8 +4,8 @@ import {RefObject, useEffect, useMemo, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
 import {CardFieldsElementOptions} from "@citypay/sdk";
-import {useCardFieldsContext} from "@/components/CardFieldsProvider";
-import {CpeFormHandlers} from "@/components/useCardElement";
+import {useCardFieldsContext} from "@/CardFieldsProvider";
+import {CpeFormHandlers} from "@/useCardElement";
 
 export type FieldsReferences = {
     csc: RefObject<HTMLElement | null>;

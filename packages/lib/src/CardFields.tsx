@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import {type CpeFormHandlers} from './useCardElement';
+import {type CpeFormHandlers} from '@/useCardElement';
 import {CardFieldsElementOptions} from "@citypay/sdk";
-import {useElementsStatus} from "@/components/CityPayProvider";
-import {FieldsReferences, useCardFields} from "@/components/useCardFields";
+import {useElementsStatus} from "@/CityPayProvider";
+import {FieldsReferences, useCardFields} from "@/useCardFields";
 
 export type CardFieldsProps = {
     refs: FieldsReferences;
@@ -31,13 +31,15 @@ export const CardFields: React.FC<CardFieldsProps> = ({
         return <>idle...</>
     }
 
-    if (status == 'cpp:error') {
-        return <>️<p className={"text-sm"}>
-
-            <span>Unable to render CityPay PaymentElement:</span>
-            <span className={"text-gray-700"}>{' ' + error}</span>
-
-        </p> </>
+    if (status === 'cpp:error') {
+        return (
+            <>
+                <p style={{ fontSize: '0.875rem' }}>
+                    <span>Unable to render CityPay PaymentElement:</span>
+                    <span style={{ color: '#374151' }}>{' ' + error}</span>
+                </p>
+            </>
+        );
     }
 
     return null

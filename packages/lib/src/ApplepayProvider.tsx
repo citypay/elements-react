@@ -1,8 +1,8 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
+import {ElementsInstance, HookState, useElementInstances, useElements} from "@/CityPayProvider";
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 import {AltPaymentOptions} from "@citypay/sdk";
 
-type ApplepayElementContextShape = {
+export type ApplepayElementContextShape = {
     identifier: string
     getElement: () => ElementsInstance | null;
     ensureElement: (opts: AltPaymentOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>

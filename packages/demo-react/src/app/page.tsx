@@ -2,16 +2,27 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
 import {useEffect, useRef, useState} from "react";
-import {CityPayProvider, useElements} from "@/components/CityPayProvider";
-import {CardElement} from "@/components/CardElement";
-import {PaymentIntentSession, VerifyAuthResponse} from "@citypay/sdk";
-import {CardElementProvider, useCardElementContext} from "@/components/CardElementProvider";
-import {CardFieldsProvider, useCardFieldsContext} from "@/components/CardFieldsProvider";
-import {FieldsReferences} from "@/components/useCardFields";
-import {CardFields} from "@/components/CardFields";
 import {CardForm} from "@/app/FieldsCardForm";
-import {ApplepayElementProvider} from "@/components/ApplepayProvider";
-import {ApplepayElement} from "@/components/ApplepayElement";
+
+import {
+    ApplepayElement,
+    ApplepayElementProvider,
+    CardElement,
+    CardElementProvider,
+    CardFields,
+    CardFieldsProvider,
+    CityPayElements,
+    CityPayProvider,
+    FieldsReferences,
+    PaymentIntentSession,
+    useCardElementContext,
+    useCardFieldsContext,
+    useElements,
+    VerifyAuthResponse
+} from "@citypay/elements-react"
+import {ServerConnection} from "@/server-conn/serverConnection";
+
+const SERVER_DOMAIN = process.env.EX_CP_SERVER_DOMAIN || "http://localhost:3005"
 
 const products = [
     {
@@ -387,7 +398,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
     const cardElCtx = useCardElementContext();
     const cardFieldsCtx = useCardFieldsContext();
-    const elementsCtx = useElements()
+    const elementsCtx: CityPayElements = useElements()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
@@ -439,80 +450,53 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
             setIsSubmitting(true);
 
             // 1) Create a token from the mounted card element(s)
+            console.log("[cp-demo] Tokenising card")
             const tokenResult = await api.tokenise();
-            // console.log('>>> tokenResult:', tokenResult);
 
             // 2) Attach token to an intent (if your flow uses intents)
-            const attachResult = await api.attach({
+            console.log("[cp-demo] Attaching token")
+            await api.attach({
                 token: tokenResult.token,
                 select: true,
                 intentId: paymentSession.paymentIntentId
             });
-            console.log('>>> attachResult:', attachResult);
 
             // 3) Confirm the payment (3DS may happen here)
-            const confirmResult = await api.confirm({
-                // intentId: attachResult.intentId, returnUrl: ...
-            });
-            console.log('>>> confirmResult:', confirmResult);
+            const confirmResult = await api.confirm({});
 
             if (confirmResult.status == 'error') {
                 setPaymentError(confirmResult.error.message);
             } else if (confirmResult.status == 'requires_authorisation') {
-                // now present for authorisation
-                fetch('/api/auth', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        intentId: paymentSession.paymentIntentId
-                    })
-                }).then(async (resp) => {
 
-                    const auth = await resp.json()
-                    console.log(auth);
+                ServerConnection.authorise(paymentSession.paymentIntentId)
+                .then(async (auth) => {
 
                     if (auth.authorised) {
-                        setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verifying auth...`)
-
-                        const intentId = await elementsCtx?.getPaymentIntentId()
-                        if (!intentId) throw new Error('intentId is required')
-                        console.log('Verifying intent ', intentId)
-                        const v: VerifyAuthResponse | undefined = await elementsCtx?.verifyPaymentIntentAuth()
-                        console.log('Verify intent result ', v)
-
-                        if (v && v.status === 'success') {
-                            setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verified auth: ${v.auth.authcode}`)
-                        } else {
-                            setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
-                        }
+                        return ServerConnection.verifyAuth(paymentSession.paymentIntentId)
 
                     } else {
-                        setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
+                        throw new Error("Payment not authorised")
                     }
-
-
+                }).then((verifyResult: VerifyAuthResponse) => {
+                    if (verifyResult.status === 'success') {
+                        setPaymentComplete(`Payment authorised on card. Verified authcode: ${verifyResult.auth.authcode}`)
+                    } else {
+                        throw new Error("Payment authorised but not verified")
+                    }
+                }).catch((ex) => {
+                    console.error(ex)
+                    setPaymentError(ex)
+                }).finally(() => {
+                    setIsSubmitting(false);
                 })
             }
 
             // Handle success UI...
         } catch (err) {
-            // Show error UI...
-            // 2. or by catching the error on the elements function calls
             console.error('>>> Error during payment processing:', err);
             setPaymentError('Error during payment processing')
-        } finally {
             setIsSubmitting(false);
         }
-    }
-
-    function ButtonToggle() {
-        return (<button onClick={async () => {
-            setFormDisabled((e) => !e)
-        }}>
-            Toggle Mount 2...
-        </button>)
     }
 
     return (
@@ -556,7 +540,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                           <>
                             <CardForm refs={fieldsRefs}/>
                             <CardFields refs={fieldsRefs} options={{id: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan'}}
-                            onChange={(c) => {
+                            onChange={(c: any) => {
 
                                 function updateField(
                                     key: keyof typeof c,
@@ -656,7 +640,12 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         )}
 
                         {paymentMethod.id === 'apple' && <ApplepayElement
-                                                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
+                                                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'},
+                                                                        appearance: {
+                                                                type: 'donate',
+                                                                            style: 'white'
+                                                                        }
+                        }}
                                                             onAuthoriseEnd={async () => {
                                                                 setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
                                                                 const intentId = await elementsCtx?.getPaymentIntentId()
@@ -691,21 +680,14 @@ export default function ExamplePage() {
     const [applepayIdentifier, ] = useState<string>(`applepay-${Math.random().toPrecision(5)}`)
 
     useEffect(() => {
-        fetch('/api/payment-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: 1000,
-                currency: 'GBP'
+        ServerConnection.checkServerConnection()
+            .then(() => {
+                return ServerConnection.getPaymentSession()
+            }).then(session => {
+                setPaymentSession(session)
+            }).catch(ex => {
+                console.error(ex)
             })
-        }).then(async (resp) => {
-            if (resp.status === 200) {
-                const data = await resp.json()
-                setPaymentSession(data)
-            }
-        })
     }, []);
 
     if (!paymentSession) {
@@ -714,7 +696,7 @@ export default function ExamplePage() {
 
     return <>
 
-        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_CITYPAY_PUB_KEY}
+        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_EX_CP_PUBLIC_KEY}
                          createServerIntent={async () => {
                              return paymentSession;
                          }}

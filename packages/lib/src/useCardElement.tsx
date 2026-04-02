@@ -1,10 +1,11 @@
+// useCardForm.tsx
 'use client';
 
-import {SetStateAction, useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import type {AltPaymentOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
-import {useApplepayElementContext} from "@/components/ApplepayProvider";
+import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
+import {useCardElementContext} from "@/CardElementProvider";
 
 
 // extends CpeChangeState with access to the elements api
@@ -12,28 +13,35 @@ export type ChangeState = {
     elements: ElementsApi
 } & CpeChangeState
 
-export type CpeApplePayHandlers = {
-    // onChange?: (c: ChangeState) => void
-    // onReady?: (elements: ElementsApi) => void
-    onAuthoriseEnd?: (elements: ElementsApi) => void
+export type CpeFormHandlers = {
+    onChange?: (c: ChangeState) => void
+    onReady?: (elements: ElementsApi) => void
     onError?: (elements: ElementsApi | null, e: unknown) => void
 }
 
-export function useApplepayElement(
-    options: AltPaymentOptions,
-    handlers?: CpeApplePayHandlers
+export function useCardElement(
+    id: string,
+    baseOptions?: Omit<CardElementOptions, 'id' | 'element'>,
+    handlers?: CpeFormHandlers
 ) {
 
-    const elementsRef = useApplepayElementContext();
+    const elementCtx = useCardElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const formRef = useRef<any | null>(null);
     const mountedRef = useRef<boolean>(false);
 
+    // const [form, setForm] = useState<any>();
     const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
+
+    const options = useMemo<CardElementOptions>(() => ({
+        id,
+        ...(baseOptions ?? {}),
+        element: `#cp-form-${id}`,
+    }), []);
 
     useEffect(() => {
         if (providerStatus !== 'cpp:ready') return;
@@ -44,8 +52,12 @@ export function useApplepayElement(
         const init = () => {
             if (cancelled) return;
 
-            elementsRef.ensureElement(options, setState)
-                .then((ref: SetStateAction<ElementsInstance | undefined>) => {
+            const node = containerRef.current;
+            // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
+            const initOptions = node ? { ...options, element: node as any } : options;
+
+            elementCtx.ensureElement(initOptions, setState)
+                .then(ref => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
@@ -74,21 +86,27 @@ export function useApplepayElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementsRef]);
+    }, [providerStatus, providerError, options, elementCtx, handlers]);
+
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
         const {opts, api} = elementsInstance;
-        const {element} = opts;
+
+        if(!opts) {
+            throw new Error('No opts provided');
+        }
+
+        const {element} = opts as CardElementOptions;
         console.log('>>>> elementsInstance', element)
 
         if (!element) {
             throw new Error('No element provided');
         }
 
-        if (handlers?.onAuthoriseEnd) {
-            api.onAuthoriseEnd(handlers?.onAuthoriseEnd)
+        if (handlers?.onChange) {
+            api.onChange(handlers.onChange);
         }
 
     }, [elementsInstance])

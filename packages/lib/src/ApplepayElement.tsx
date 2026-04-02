@@ -2,22 +2,22 @@
 
 import React, {useMemo} from 'react';
 import {type AltPaymentOptions} from "@citypay/sdk";
-import {CpeApplePayHandlers, useApplepayElement} from "@/components/useApplePay";
-import {useApplepayElementIdentifier} from "@/components/ApplepayProvider";
-import {useElementsStatus} from "@/components/CityPayProvider";
+import {useApplepayElementIdentifier} from "@/ApplepayProvider";
+import {CpeApplePayHandlers, useApplepayElement} from "@/useApplePay";
+import {useElementsStatus} from "@/CityPayProvider";
 
-type Props = {
+export type ApplepayElementProps = {
     options: Omit<AltPaymentOptions, 'identifier'>;
     visible?: boolean;
 } & CpeApplePayHandlers;
 
 
-export const ApplepayElement: React.FC<Props> = ({
+export const ApplepayElement: React.FC<ApplepayElementProps> = ({
                                                     options,
                                                     onAuthoriseEnd,
                                                     onError,
                                                     visible = true,
-                                                }: Props) => {
+                                                }: ApplepayElementProps) => {
 
     const applepayIdentifier = useApplepayElementIdentifier()
 
