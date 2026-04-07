@@ -4,11 +4,10 @@
   "private": false,
   "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "build:lib": "pnpm --filter '@citypay/elements-react' build",
-    "build:demo": "pnpm --filter '@citypay/elements-react-demo' --filter '@citypay/elements-demo-server' build",
-    "certs:bash": "pnpm -r certs:bash",
-    "certs:win": "pnpm -r certs:win",
-    "dev": "pnpm --parallel -r dev"
+    "lib:build": "pnpm --filter '@citypay/elements-react' build",
+    "demo:certs:bash": "pnpm -r certs:bash",
+    "demo:certs:win": "pnpm -r certs:win",
+    "demo:dev": "pnpm --parallel --filter '@citypay/elements-react-demo' -- filter '@citypay/elements-demo-server' dev"
   },
   "dependencies": {
     "next": "16.0.7"
