@@ -91,14 +91,7 @@ app.post('/verify-auth', (req, res) => {
     payment_intent_id: intentId
   })
     .then((response) => {
-      if (response?.authcode?.length > 0) {
-        return res.json({
-          status: 'success',
-          auth: response
-        });
-      }
-
-      res.status(400).json({ status: 'error' });
+      res.json(response);
     })
     .catch((err) => {
       handleError(res, 'Failed to verify authorisation', err);

@@ -14,6 +14,7 @@ import {
     CityPayElements,
     CityPayProvider,
     FieldsReferences,
+    FormLayoutName,
     PaymentIntentSession,
     useCardElementContext,
     useCardFieldsContext,
@@ -398,12 +399,12 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
     const cardElCtx = useCardElementContext();
     const cardFieldsCtx = useCardFieldsContext();
-    const elementsCtx: CityPayElements = useElements()
+    const elementsCtx: CityPayElements | null = useElements()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
-    const [layout, setLayout] = useState<'stack' | 'stack-compact' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('stack');
+    const [layout, setLayout] = useState<FormLayoutName>('stack');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
@@ -539,7 +540,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         {paymentMethod.id === 'credit-card-form' &&
                           <>
                             <CardForm refs={fieldsRefs}/>
-                            <CardFields refs={fieldsRefs} options={{id: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan'}}
+                            <CardFields refs={fieldsRefs} options={{identifier: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan', showCardIcon: true}}
                             onChange={(c: any) => {
 
                                 function updateField(
@@ -615,6 +616,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                 key={cardElementId}
                                 elementId={cardElementId}
                                 options={{
+                                    identifier: 'cardElement',
                                     language: 'en',
                                     layout: layout,
                                     width: '100%',
