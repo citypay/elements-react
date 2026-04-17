@@ -27,7 +27,7 @@ export async function POST() {
     try {
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            amount: 1001,
+            amount: 7552,
             currency: "GBP",
             identifier: `cart-id-${crypto.randomUUID()}`,
             billTo: {

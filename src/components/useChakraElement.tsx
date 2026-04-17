@@ -1,47 +1,32 @@
-// useCardForm.tsx
 'use client';
 
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
-import {useCardElementContext} from "@/components/CardElementProvider";
+import type {ChakraElementOptions} from "@citypay/sdk";
+import {type CpeFormHandlers} from "@/components/useCardElement";
+import {useChakraElementContext} from "@/components/ChakraElementProvider";
 
-
-// extends CpeChangeState with access to the elements api
-export type ChangeState = {
-    elements: ElementsApi
-} & CpeChangeState
-
-export type CpeFormHandlers = {
-    onChange?: (c: ChangeState) => void
-    onReady?: (elements: ElementsApi) => void
-    onError?: (elements: ElementsApi | null, e: unknown) => void
-}
-
-export function useCardElement(
+export function useChakraElement(
     id: string,
-    baseOptions?: Omit<CardElementOptions, 'identifier' | 'element'>,
+    baseOptions?: Omit<ChakraElementOptions, 'identifier' | 'element'>,
     handlers?: CpeFormHandlers
 ) {
 
-    const elementCtx = useCardElementContext();
+    const elementCtx = useChakraElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const formRef = useRef<any | null>(null);
-    const mountedRef = useRef<boolean>(false);
 
-    // const [form, setForm] = useState<any>();
     const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
-    const options = useMemo<CardElementOptions>(() => ({
+    const options = useMemo<ChakraElementOptions>(() => ({
         identifier: id,
         ...(baseOptions ?? {}),
         element: `#cp-form-${id}`,
-    }), []);
+    }), [id, baseOptions]);
 
     useEffect(() => {
         if (providerStatus !== 'cpp:ready') return;
@@ -53,8 +38,7 @@ export function useCardElement(
             if (cancelled) return;
 
             const node = containerRef.current;
-            // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
-            const initOptions = node ? { ...options, element: node as any } : options;
+            const initOptions = node ? {...options, element: node as HTMLElement} : options;
 
             elementCtx.ensureElement(initOptions, setState)
                 .then(ref => {
@@ -66,40 +50,30 @@ export function useCardElement(
         };
 
         if (!containerRef.current) {
-            // Defer until after the ref attaches (commit phase)
             timeoutId = setTimeout(init, 0);
         } else {
             init();
         }
 
-        // void createAndMount();
         return () => {
             cancelled = true;
             if (timeoutId) clearTimeout(timeoutId);
-            try {
-                formRef.current?.unmount?.();
-                formRef.current?.destroy?.();
-            } catch {
-            }
-            mountedRef.current = false;
-            formRef.current = null;
             setState("el:idle");
             setError(null);
         };
     }, [providerStatus, providerError, options, elementCtx, handlers]);
-
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
         const {opts, api} = elementsInstance;
 
-        if(!opts) {
+        if (!opts) {
             throw new Error('No opts provided');
         }
 
-        const {element} = opts as CardElementOptions;
-        console.log('>>>> elementsInstance', element)
+        const {element} = opts as ChakraElementOptions;
+        console.log('>>>> chakra elementsInstance', element)
 
         if (!element) {
             throw new Error('No element provided');
@@ -108,8 +82,14 @@ export function useCardElement(
         if (handlers?.onChange) {
             api.onChange(handlers.onChange);
         }
+        if (handlers?.onReady) {
+            api.onReady(handlers.onReady)
+        }
+        if (handlers?.onError) {
+            api.onError(handlers.onError)
+        }
 
-    }, [elementsInstance])
+    }, [elementsInstance, handlers?.onChange, handlers?.onError, handlers?.onReady])
 
     const api = useMemo(() => ({
         state,

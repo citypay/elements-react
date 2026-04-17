@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@citypay/sdk':
-        specifier: 2.0.5
-        version: 2.0.5
+        specifier: file:../citypay-sdk/packages/facade/dist
+        version: file:../citypay-sdk/packages/facade/dist
       next:
         specifier: 16.0.7
         version: 16.0.7(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -61,8 +61,8 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@citypay/sdk@2.0.5':
-    resolution: {integrity: sha512-PlSTF7mABzYBIkB2KK6/nfH7RSsnNZ31C+b2Oq62y1CxDN+BhZH6ANnpXufSq031K7avtfNXNB14sSiBqMt5Cg==}
+  '@citypay/sdk@file:../citypay-sdk/packages/facade/dist':
+    resolution: {directory: ../citypay-sdk/packages/facade/dist, type: directory}
 
   '@emnapi/core@1.5.0':
     resolution: {integrity: sha512-sbP8GzB1WDzacS8fgNPpHlp6C9VZe+SJP3F90W9rLemaQj2PzIuTEl1qDOYQf58YIpyjViI24y9aPWCjEzY2cg==}
@@ -2264,7 +2264,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@citypay/sdk@2.0.5': {}
+  '@citypay/sdk@file:../citypay-sdk/packages/facade/dist': {}
 
   '@emnapi/core@1.5.0':
     dependencies:

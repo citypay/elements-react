@@ -3,7 +3,8 @@ import {CityPay} from "@citypay/sdk";
 
 export async function POST(request: NextRequest) {
 
-    const { intentId } = await request.json()
+    const body = await request.json()
+    const intentId = body.intentId ?? body.payment_intent_id
 
     const clientId = process.env.CITYPAY_CLIENT_ID
     const licenceKey = process.env.CITYPAY_LICENCE_KEY
@@ -11,6 +12,10 @@ export async function POST(request: NextRequest) {
 
     if (!clientId || !licenceKey || !mid) {
         return NextResponse.json({error: "Missing required environment variables"}, {status: 500});
+    }
+
+    if (!intentId) {
+        return NextResponse.json({error: "Missing payment intent id"}, {status: 400});
     }
 
     const citypay = new CityPay(clientId, licenceKey, {

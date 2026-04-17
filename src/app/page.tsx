@@ -12,6 +12,8 @@ import {CardFields} from "@/components/CardFields";
 import {CardForm} from "@/app/FieldsCardForm";
 import {ApplepayElementProvider} from "@/components/ApplepayProvider";
 import {ApplepayElement} from "@/components/ApplepayElement";
+import {ChakraElementProvider, useChakraElementContext} from "@/components/ChakraElementProvider";
+import {ChakraElement} from "@/components/ChakraElement";
 
 const products = [
     {
@@ -44,7 +46,27 @@ const paymentMethods = [
     {id: 'credit-card-form', title: 'CCForm'},
     {id: 'apple', title: 'ApplePay'},
     {id: 'google', title: 'GooglePay'},
+    {id: 'chakra', title: 'Chakra'},
 ]
+
+type ChakraLayout = 'add' | 'pay'
+type WidgetLayout = 'stack' | 'stack-compact' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'
+
+const chakraLayouts: Array<{value: ChakraLayout; label: string}> = [
+    {value: 'add', label: 'Add'},
+    {value: 'pay', label: 'Pay'},
+]
+
+const chakraLayoutDescriptions: Record<ChakraLayout, {title: string; body: string}> = {
+    add: {
+        title: 'Add element',
+        body: 'Use this flow to collect and store payment details for later use or to save a card before checkout, and the user can set the card as the default for future use.',
+    },
+    pay: {
+        title: 'Pay element',
+        body: 'Use this flow to collect payment details for an immediate payment while also saving the card for future use. It is suited to direct checkout, and the user can set the card as the default for future use.',
+    },
+}
 
 
 function ContactInfo() {
@@ -387,17 +409,21 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
     const cardElCtx = useCardElementContext();
     const cardFieldsCtx = useCardFieldsContext();
+    const chakraCtx = useChakraElementContext();
     const elementsCtx = useElements()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
-    const [layout, setLayout] = useState<'stack' | 'stack-compact' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('stack');
+    const [layout, setLayout] = useState<WidgetLayout>('stack');
+    const [chakraLayout, setChakraLayout] = useState<ChakraLayout>('add');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
     const [cardElementNonce, setCardElementNonce] = useState(0);
+    const [chakraElementNonce, setChakraElementNonce] = useState(0);
     const cardElementId = `cardform-${layout}-${cardElementNonce}`;
+    const chakraElementId = `chakraform-${chakraLayout}-${chakraElementNonce}`;
     const fieldsRefs: FieldsReferences = {
         csc: useRef(null),
         expiry: useRef(null),
@@ -411,23 +437,41 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
             ? cardElCtx.getElement()?.api
             : paymentMethod.id === "credit-card-form"
                 ? cardFieldsCtx.getElement()?.api
+                : paymentMethod.id === "chakra"
+                    ? chakraCtx.getElement()?.api
                 : undefined;
 
     const selectPaymentMethod = (pm: typeof paymentMethods[number]) => {
         setPaymentMethod(pm);
         setCardFormComplete(false);
+        setCardFieldsComplete(false);
+        setPaymentError(undefined);
+        setPaymentComplete(undefined);
 
         if (pm.id === 'credit-card') {
             setCardElementNonce((n) => n + 1);
         }
+
+        if (pm.id === 'chakra') {
+            setChakraLayout('add');
+            setChakraElementNonce((n) => n + 1);
+        }
     };
 
     useEffect(() => {
+        if (paymentMethod.id === 'chakra') {
+            setFormDisabled(true);
+            return;
+        }
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
-    }, [cardFormComplete, cardFieldsComplete])
+    }, [paymentMethod.id, cardFormComplete, cardFieldsComplete])
 
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (paymentMethod.id === 'chakra') {
+            return;
+        }
 
         const api = getActiveApi();
         if (!api) {
@@ -604,7 +648,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         id="layout-select"
                                         value={layout}
                                         onChange={(e) => {
-                                            setLayout(e.target.value as any)
+                                            setLayout(e.target.value as WidgetLayout)
                                             setCardFormComplete(false)
                                             setCardElementNonce((n) => n + 1)
                                         }}
@@ -617,6 +661,36 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         <option value="row-minimal">Row Minimal</option>
                                         <option value="column">Column</option>
                                         <option value="column-compact">Column Compact</option>
+                                    </select>
+                                    <ChevronDownIcon
+                                        aria-hidden="true"
+                                        className="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {paymentMethod.id === 'chakra' && (
+                            <div className="mt-4 mb-8">
+                                <label htmlFor="chakra-layout-select" className="block text-sm font-medium text-gray-700">
+                                    Chakra Layout
+                                </label>
+                                <div className="mt-2 grid grid-cols-1">
+                                    <select
+                                        id="chakra-layout-select"
+                                        value={chakraLayout}
+                                        onChange={(e) => {
+                                            setChakraLayout(e.target.value as ChakraLayout)
+                                            setPaymentError(undefined)
+                                            setPaymentComplete(undefined)
+                                            setChakraElementNonce((n) => n + 1)
+                                        }}
+                                        className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                    >
+                                        {chakraLayouts.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
                                     </select>
                                     <ChevronDownIcon
                                         aria-hidden="true"
@@ -670,6 +744,30 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                                                 }
                                                             }}
                                                             />}
+                        {paymentMethod.id === 'chakra' && (
+                            <>
+                                <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
+                                    <h3 className="text-sm font-semibold text-gray-900">
+                                        {chakraLayoutDescriptions[chakraLayout].title}
+                                    </h3>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        {chakraLayoutDescriptions[chakraLayout].body}
+                                    </p>
+                                </div>
+                                <ChakraElement
+                                    key={chakraElementId}
+                                    elementId={chakraElementId}
+                                    options={{
+                                        language: 'en',
+                                        layout: chakraLayout,
+                                        width: '100%',
+                                        showDefaultCardOption: true,
+                                        // defaultCardSelected: false,
+                                        defaultCardChecked: false
+                                    }}
+                                />
+                            </>
+                        )}
                         {paymentMethod.id === 'google' && <p>Google TODO</p>}
                         <div className={"text-green-800"}>{ paymentComplete }</div>
                         <div className={"text-red-800"}>{ paymentError }</div>
@@ -718,12 +816,15 @@ export default function ExamplePage() {
                              return paymentSession;
                          }}
                          middleware={{
+                            authorise: '/api/auth',
                             verifyAuth: '/api/verify-auth'
                          }}>
             <ApplepayElementProvider id={applepayIdentifier}>
             <CardElementProvider id={'cardform'} >
             <CardFieldsProvider id={'cardfields'}>
+            <ChakraElementProvider id={'chakraform'}>
                 <FormExample paymentSession={paymentSession} />
+            </ChakraElementProvider>
             </CardFieldsProvider>
             </CardElementProvider>
             </ApplepayElementProvider>
