@@ -1,6 +1,7 @@
 'use client'
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
+import type {ComponentProps} from "react";
 import {useEffect, useRef, useState} from "react";
 import {CityPayProvider, useElements} from "@/components/CityPayProvider";
 import {CardElement} from "@/components/CardElement";
@@ -12,7 +13,7 @@ import {CardFields} from "@/components/CardFields";
 import {CardForm} from "@/app/FieldsCardForm";
 import {ApplepayElementProvider} from "@/components/ApplepayProvider";
 import {ApplepayElement} from "@/components/ApplepayElement";
-import {ChakraElementProvider, useChakraElementContext} from "@/components/ChakraElementProvider";
+import {ChakraElementProvider} from "@/components/ChakraElementProvider";
 import {ChakraElement} from "@/components/ChakraElement";
 
 const products = [
@@ -66,6 +67,37 @@ const chakraLayoutDescriptions: Record<ChakraLayout, {title: string; body: strin
         title: 'Pay element',
         body: 'Use this flow to collect payment details for an immediate payment while also saving the card for future use. It is suited to direct checkout, and the user can set the card as the default for future use.',
     },
+}
+
+type SharedProviderProps = Pick<ComponentProps<typeof CityPayProvider>, 'pubKey' | 'createServerIntent'>;
+
+function ChakraDemoProvider({
+    providerProps,
+    chakraElementId,
+    chakraLayout,
+}: {
+    providerProps: SharedProviderProps;
+    chakraElementId: string;
+    chakraLayout: ChakraLayout;
+}) {
+    return (
+        <CityPayProvider {...providerProps}>
+            <ChakraElementProvider id={'chakraform'}>
+                <ChakraElement
+                    key={chakraElementId}
+                    elementId={chakraElementId}
+                    options={{
+                        language: 'en',
+                        layout: chakraLayout,
+                        width: '100%',
+                        showDefaultCardOption: true,
+                        defaultCardChecked: false,
+                        defaultCardSelected: false,
+                    }}
+                />
+            </ChakraElementProvider>
+        </CityPayProvider>
+    );
 }
 
 
@@ -405,11 +437,16 @@ function Delivery() {
     )
 }
 
-export function FormExample({paymentSession}: { paymentSession: PaymentIntentSession }) {
+export function FormExample({
+    paymentSession,
+    chakraProviderProps,
+}: {
+    paymentSession: PaymentIntentSession;
+    chakraProviderProps: SharedProviderProps;
+}) {
 
     const cardElCtx = useCardElementContext();
     const cardFieldsCtx = useCardFieldsContext();
-    const chakraCtx = useChakraElementContext();
     const elementsCtx = useElements()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
@@ -437,8 +474,6 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
             ? cardElCtx.getElement()?.api
             : paymentMethod.id === "credit-card-form"
                 ? cardFieldsCtx.getElement()?.api
-                : paymentMethod.id === "chakra"
-                    ? chakraCtx.getElement()?.api
                 : undefined;
 
     const selectPaymentMethod = (pm: typeof paymentMethods[number]) => {
@@ -754,17 +789,10 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         {chakraLayoutDescriptions[chakraLayout].body}
                                     </p>
                                 </div>
-                                <ChakraElement
-                                    key={chakraElementId}
-                                    elementId={chakraElementId}
-                                    options={{
-                                        language: 'en',
-                                        layout: chakraLayout,
-                                        width: '100%',
-                                        showDefaultCardOption: true,
-                                        // defaultCardSelected: false,
-                                        defaultCardChecked: false
-                                    }}
+                                <ChakraDemoProvider
+                                    providerProps={chakraProviderProps}
+                                    chakraElementId={chakraElementId}
+                                    chakraLayout={chakraLayout}
                                 />
                             </>
                         )}
@@ -809,12 +837,14 @@ export default function ExamplePage() {
         return <>loading payment session...</>
     }
 
+    const sharedProviderProps: SharedProviderProps = {
+        pubKey: process.env.NEXT_PUBLIC_CITYPAY_PUB_KEY,
+        createServerIntent: async () => paymentSession,
+    };
+
     return <>
 
-        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_CITYPAY_PUB_KEY}
-                         createServerIntent={async () => {
-                             return paymentSession;
-                         }}
+        <CityPayProvider {...sharedProviderProps}
                          middleware={{
                             authorise: '/api/auth',
                             verifyAuth: '/api/verify-auth'
@@ -822,9 +852,7 @@ export default function ExamplePage() {
             <ApplepayElementProvider id={applepayIdentifier}>
             <CardElementProvider id={'cardform'} >
             <CardFieldsProvider id={'cardfields'}>
-            <ChakraElementProvider id={'chakraform'}>
-                <FormExample paymentSession={paymentSession} />
-            </ChakraElementProvider>
+                <FormExample paymentSession={paymentSession} chakraProviderProps={sharedProviderProps} />
             </CardFieldsProvider>
             </CardElementProvider>
             </ApplepayElementProvider>
