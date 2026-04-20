@@ -1,27 +1,27 @@
 'use client';
 
 import React from 'react';
-import {type ChakraElementOptions} from "@citypay/sdk";
+import {FlowElementOptions} from '@citypay/sdk';
 import {useElementsStatus} from "@/components/CityPayProvider";
 import {type CpeFormHandlers} from "@/components/useCardElement";
-import {useChakraElement} from "@/components/useChakraElement";
+import {useFlowElement} from "@/components/useFlowElement";
 
-export type ChakraElementProps = {
+export type FlowElementProps = {
     elementId?: string;
-    options?: Omit<ChakraElementOptions, 'identifier' | 'element'>;
+    options?: Omit<FlowElementOptions, 'identifier' | 'element'>;
     visible?: boolean;
 } & CpeFormHandlers;
 
-export const ChakraElement: React.FC<ChakraElementProps> = ({
+export const FlowElement: React.FC<FlowElementProps> = ({
     elementId,
     options,
     onChange,
     onReady,
     onError,
     visible = true,
-}: ChakraElementProps) => {
+}: FlowElementProps) => {
     const id = elementId ?? 'default';
-    const {containerRef} = useChakraElement(id, options, {onChange, onReady, onError})
+    const {containerRef} = useFlowElement(id, options, {onChange, onReady, onError})
     const {status, error} = useElementsStatus()
 
     if (status == 'cpp:initialising') {
@@ -35,7 +35,7 @@ export const ChakraElement: React.FC<ChakraElementProps> = ({
     if (status == 'cpp:error') {
         return <>️<p className={"text-sm"}>
 
-            <span>Unable to render CityPay ChakraElement:</span>
+            <span>Unable to render CityPay FlowElement:</span>
             <span className={"text-gray-700"}>{' ' + error}</span>
 
         </p> </>

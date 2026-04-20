@@ -20,7 +20,7 @@ export function CheckoutPage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                amount: 1000,
+                amount: 0,
                 currency: 'GBP',
             }),
         }).then(async (response) => {
@@ -55,7 +55,7 @@ export function CheckoutPage() {
                     <CardFieldsProvider id="cardfields">
                         <CheckoutForm
                             paymentSession={paymentSession}
-                            chakraProviderProps={sharedProviderProps}
+                            flowProviderProps={sharedProviderProps}
                         />
                     </CardFieldsProvider>
                 </CardElementProvider>

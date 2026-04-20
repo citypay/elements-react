@@ -3,17 +3,17 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import type {ChakraElementOptions} from "@citypay/sdk";
+import {FlowElementOptions} from '@citypay/sdk';
 import {type CpeFormHandlers} from "@/components/useCardElement";
-import {useChakraElementContext} from "@/components/ChakraElementProvider";
+import {useFlowElementContext} from "@/components/FlowElementProvider";
 
-export function useChakraElement(
+export function useFlowElement(
     id: string,
-    baseOptions?: Omit<ChakraElementOptions, 'identifier' | 'element'>,
+    baseOptions?: Omit<FlowElementOptions, 'identifier' | 'element'>,
     handlers?: CpeFormHandlers
 ) {
 
-    const elementCtx = useChakraElementContext();
+    const elementCtx = useFlowElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -22,7 +22,7 @@ export function useChakraElement(
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
-    const options = useMemo<ChakraElementOptions>(() => ({
+    const options = useMemo<FlowElementOptions>(() => ({
         identifier: id,
         ...(baseOptions ?? {}),
         element: `#cp-form-${id}`,
@@ -72,8 +72,8 @@ export function useChakraElement(
             throw new Error('No opts provided');
         }
 
-        const {element} = opts as ChakraElementOptions;
-        console.log('>>>> chakra elementsInstance', element)
+        const {element} = opts as FlowElementOptions;
+        console.log('>>>> flow elementsInstance', element)
 
         if (!element) {
             throw new Error('No element provided');

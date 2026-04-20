@@ -5,8 +5,8 @@ import {CardElement} from '@/components/CardElement';
 import {CardFields} from '@/components/CardFields';
 import {ApplepayElement} from '@/components/ApplepayElement';
 import {CardForm} from '@/app/FieldsCardForm';
-import {chakraLayoutDescriptions, chakraLayouts, widgetLayoutOptions} from '@/components/checkout/data';
-import {ChakraDemoProvider} from '@/components/checkout/ChakraDemoProvider';
+import {flowTypeDescriptions, flowTypes, widgetLayoutOptions} from '@/components/checkout/data';
+import {FlowDemoProvider} from '@/components/checkout/FlowDemoProvider';
 import {
     DeliverySection,
     OrderSummary,
@@ -15,24 +15,24 @@ import {
     SelectField,
 } from '@/components/checkout/CheckoutSections';
 import {useCheckoutForm} from '@/components/checkout/useCheckoutForm';
-import type {ChakraLayout, SharedProviderProps, WidgetLayout} from '@/components/checkout/types';
+import type {FlowType, SharedProviderProps, WidgetLayout} from '@/components/checkout/types';
 
 type Props = {
     paymentSession: PaymentIntentSession;
-    chakraProviderProps: SharedProviderProps;
+    flowProviderProps: SharedProviderProps;
 };
 
-export function CheckoutForm({paymentSession, chakraProviderProps}: Props) {
+export function CheckoutForm({paymentSession, flowProviderProps}: Props) {
     const {
         cardElementId,
-        chakraElementId,
-        chakraLayout,
+        flowElementId,
+        flowType,
         fieldsRefs,
         formDisabled,
         handleApplePayAuthoriseEnd,
         handleCardElementChange,
         handleCardFieldsChange,
-        handleChakraLayoutChange,
+        handleFlowTypeChange,
         handleWidgetLayoutChange,
         layout,
         paymentComplete,
@@ -88,13 +88,13 @@ export function CheckoutForm({paymentSession, chakraProviderProps}: Props) {
                             />
                         )}
 
-                        {paymentMethod.id === 'chakra' && (
+                        {paymentMethod.id === 'flow' && (
                             <SelectField
-                                id="chakra-layout-select"
-                                label="Chakra Layout"
-                                value={chakraLayout}
-                                options={chakraLayouts}
-                                onChange={(value) => handleChakraLayoutChange(value as ChakraLayout)}
+                                id="flow-type-select"
+                                label="Flow Type"
+                                value={flowType}
+                                options={flowTypes}
+                                onChange={(value) => handleFlowTypeChange(value as FlowType)}
                             />
                         )}
 
@@ -125,20 +125,20 @@ export function CheckoutForm({paymentSession, chakraProviderProps}: Props) {
                             />
                         )}
 
-                        {paymentMethod.id === 'chakra' && (
+                        {paymentMethod.id === 'flow' && (
                             <>
                                 <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
                                     <h3 className="text-sm font-semibold text-gray-900">
-                                        {chakraLayoutDescriptions[chakraLayout].title}
+                                        {flowTypeDescriptions[flowType].title}
                                     </h3>
                                     <p className="mt-1 text-sm text-gray-600">
-                                        {chakraLayoutDescriptions[chakraLayout].body}
+                                        {flowTypeDescriptions[flowType].body}
                                     </p>
                                 </div>
-                                <ChakraDemoProvider
-                                    providerProps={chakraProviderProps}
-                                    chakraElementId={chakraElementId}
-                                    chakraLayout={chakraLayout}
+                                <FlowDemoProvider
+                                    providerProps={flowProviderProps}
+                                    flowElementId={flowElementId}
+                                    flowType={flowType}
                                 />
                             </>
                         )}

@@ -1,24 +1,24 @@
 import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
-import {ChakraElementOptions} from "@citypay/sdk";
+import {FlowElementOptions} from '@citypay/sdk';
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useRef} from "react";
 
-const CHAKRA_READY_TIMEOUT_MS = 10000;
+const FLOW_READY_TIMEOUT_MS = 10000;
 
-export type ChakraElementContextShape = {
+export type FlowElementContextShape = {
     getElement: () => ElementsInstance | null;
-    ensureElement: (opts: ChakraElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
+    ensureElement: (opts: FlowElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
 }
 
-const ChakraElementContext = createContext<ChakraElementContextShape | null>(null);
+const FlowElementContext = createContext<FlowElementContextShape | null>(null);
 
-export function ChakraElementProvider({id, children}: PropsWithChildren<{id: string}>) {
+export function FlowElementProvider({id, children}: PropsWithChildren<{id: string}>) {
 
     const elements = useElements()
     const elementInstances = useElementInstances()
 
     const elementInstance = useRef<ElementsInstance | null>(null);
 
-    const ensureElement = async (opts: ChakraElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
+    const ensureElement = async (opts: FlowElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
         if (!elements) throw new Error('Elements not ready');
 
         const stableOpts = {
@@ -27,14 +27,14 @@ export function ChakraElementProvider({id, children}: PropsWithChildren<{id: str
         }
 
         h('el:creating');
-        const elementsApi = elements.chakraElement(stableOpts);
+        const elementsApi = elements.flowElement(stableOpts);
         await elementsApi.init()
         await Promise.race([
             elementsApi.awaitReady(),
             new Promise<never>((_, reject) => {
                 setTimeout(() => {
-                    reject(new Error('Chakra iframe did not become ready. Check that the Chakra route is available on the elements host.'));
-                }, CHAKRA_READY_TIMEOUT_MS);
+                    reject(new Error('Flow iframe did not become ready. Check that the Flow route is available on the elements host.'));
+                }, FLOW_READY_TIMEOUT_MS);
             })
         ])
         h("el:ready");
@@ -46,19 +46,19 @@ export function ChakraElementProvider({id, children}: PropsWithChildren<{id: str
 
     const getElement = () => { return elementInstance.current }
 
-    const value: ChakraElementContextShape = {
+    const value: FlowElementContextShape = {
         getElement: getElement,
         ensureElement: ensureElement
     };
 
     return (
-        <ChakraElementContext.Provider value={value}>{children}</ChakraElementContext.Provider>
+        <FlowElementContext.Provider value={value}>{children}</FlowElementContext.Provider>
     )
 
 }
 
-export function useChakraElementContext() {
-    const ctx = useContext(ChakraElementContext);
-    if (!ctx) throw new Error('useChakraElement must be used within an <ChakraElementContext>');
+export function useFlowElementContext() {
+    const ctx = useContext(FlowElementContext);
+    if (!ctx) throw new Error('useFlowElement must be used within an <FlowElementContext>');
     return ctx
 }

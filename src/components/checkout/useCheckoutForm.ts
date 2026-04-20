@@ -9,7 +9,7 @@ import type {FieldsReferences} from '@/components/useCardFields';
 import type {ChangeState} from '@/components/useCardElement';
 import {paymentMethods} from '@/components/checkout/data';
 import {updateCardFieldFeedback} from '@/components/checkout/cardFieldFeedback';
-import type {ChakraLayout, PaymentMethod, WidgetLayout} from '@/components/checkout/types';
+import type {FlowType, PaymentMethod, WidgetLayout} from '@/components/checkout/types';
 
 export function useCheckoutForm(paymentSession: PaymentIntentSession) {
     const cardElementContext = useCardElementContext();
@@ -20,12 +20,12 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(paymentMethods[0]);
     const [layout, setLayout] = useState<WidgetLayout>('stack');
-    const [chakraLayout, setChakraLayout] = useState<ChakraLayout>('add');
+    const [flowType, setFlowType] = useState<FlowType>('verify');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
     const [cardElementNonce, setCardElementNonce] = useState(0);
-    const [chakraElementNonce, setChakraElementNonce] = useState(0);
+    const [flowElementNonce, setFlowElementNonce] = useState(0);
 
     const fieldsRefs: FieldsReferences = {
         csc: useRef(null),
@@ -35,8 +35,8 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
     };
 
     const cardElementId = `cardform-${layout}-${cardElementNonce}`;
-    const chakraElementId = `chakraform-${chakraLayout}-${chakraElementNonce}`;
-    const formDisabled = paymentMethod.id === 'chakra' || !(cardFormComplete || cardFieldsComplete);
+    const flowElementId = `flowform-${flowType}-${flowElementNonce}`;
+    const formDisabled = paymentMethod.id === 'flow' || !(cardFormComplete || cardFieldsComplete);
 
     const getActiveApi = () =>
         paymentMethod.id === 'credit-card'
@@ -60,9 +60,9 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
             setCardElementNonce((currentNonce) => currentNonce + 1);
         }
 
-        if (nextPaymentMethod.id === 'chakra') {
-            setChakraLayout('add');
-            setChakraElementNonce((currentNonce) => currentNonce + 1);
+        if (nextPaymentMethod.id === 'flow') {
+            setFlowType('verify');
+            setFlowElementNonce((currentNonce) => currentNonce + 1);
         }
     };
 
@@ -72,10 +72,10 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
         setCardElementNonce((currentNonce) => currentNonce + 1);
     };
 
-    const handleChakraLayoutChange = (nextLayout: ChakraLayout) => {
-        setChakraLayout(nextLayout);
+    const handleFlowTypeChange = (nextType: FlowType) => {
+        setFlowType(nextType);
         resetMessages();
-        setChakraElementNonce((currentNonce) => currentNonce + 1);
+        setFlowElementNonce((currentNonce) => currentNonce + 1);
     };
 
     const handleCardFieldsChange = (changeState: ChangeState) => {
@@ -113,7 +113,7 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
     const submitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (paymentMethod.id === 'chakra') {
+        if (paymentMethod.id === 'flow') {
             return;
         }
 
@@ -194,14 +194,14 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
 
     return {
         cardElementId,
-        chakraElementId,
-        chakraLayout,
+        flowElementId,
+        flowType,
         fieldsRefs,
         formDisabled: formDisabled || isSubmitting,
         handleApplePayAuthoriseEnd,
         handleCardElementChange,
         handleCardFieldsChange,
-        handleChakraLayoutChange,
+        handleFlowTypeChange,
         handleWidgetLayoutChange,
         layout,
         paymentComplete,

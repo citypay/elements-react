@@ -6,7 +6,7 @@ export type SharedProviderProps = Pick<
     'pubKey' | 'createServerIntent'
 >;
 
-export type ChakraLayout = 'add' | 'pay';
+export type FlowType = 'verify' | 'pay';
 
 export type WidgetLayout =
     | 'stack'
@@ -22,7 +22,7 @@ export type PaymentMethodId =
     | 'credit-card-form'
     | 'apple'
     | 'google'
-    | 'chakra';
+    | 'flow';
 
 export type PaymentMethod = {
     id: PaymentMethodId;

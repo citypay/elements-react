@@ -1,20 +1,20 @@
 'use client'
 
-import {ChakraElement} from '@/components/ChakraElement';
-import {ChakraElementProvider} from '@/components/ChakraElementProvider';
+import {FlowElement} from '@/components/FlowElement';
+import {FlowElementProvider} from '@/components/FlowElementProvider';
 import {CityPayProvider} from '@/components/CityPayProvider';
-import type {ChakraLayout, SharedProviderProps} from '@/components/checkout/types';
+import type {FlowType, SharedProviderProps} from '@/components/checkout/types';
 
 type Props = {
     providerProps: SharedProviderProps;
-    chakraElementId: string;
-    chakraLayout: ChakraLayout;
+    flowElementId: string;
+    flowType: FlowType;
 };
 
-export function ChakraDemoProvider({
+export function FlowDemoProvider({
     providerProps,
-    chakraElementId,
-    chakraLayout,
+    flowElementId,
+    flowType,
 }: Props) {
 
     return (
@@ -24,20 +24,20 @@ export function ChakraDemoProvider({
                 verifyAuth: '/api/verify-auth',
             }}
         >
-            <ChakraElementProvider id="chakraform">
-                <ChakraElement
-                    key={chakraElementId}
-                    elementId={chakraElementId}
+            <FlowElementProvider id="flowform">
+                <FlowElement
+                    key={flowElementId}
+                    elementId={flowElementId}
                     options={{
                         language: 'en',
-                        layout: chakraLayout,
+                        flow: flowType,
                         width: '100%',
                         showDefaultCardOption: true,
                         defaultCardChecked: false,
                         defaultCardSelected: false,
                     }}
                 />
-            </ChakraElementProvider>
+            </FlowElementProvider>
         </CityPayProvider>
     );
 }

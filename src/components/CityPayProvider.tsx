@@ -2,9 +2,7 @@
 
 import React, {
     createContext,
-    type Dispatch,
     PropsWithChildren,
-    type SetStateAction,
     useContext,
     useEffect,
     useMemo,
@@ -12,7 +10,9 @@ import React, {
     useState,
 } from 'react';
 import {
-    AltPaymentOptions, CardElementOptions,
+    AltPaymentOptions,
+    CardElementOptions,
+    FlowElementOptions,
     CardFieldsElementOptions,
     CityPayElements,
     CityPayPromise,
@@ -67,11 +67,11 @@ export type CityPayProviderProps = PropsWithChildren<{
 
 export type ElementsInstance = {
     api: ElementsApi;
-    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions;
+    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions | FlowElementOptions;
 }
 
 function initPreconnect() {
-    const ORIGIN = 'https://ui.elements.citypay.com';
+    const ORIGIN = 'https://dev.citypay.local:3001';
     const ensureLink = (rel: 'preconnect' | 'dns-prefetch', origin: string, extraAttrs?: Record<string, string>) => {
         const selector = `link[rel="${rel}"][href="${origin}"][data-citypay="true"]`;
         let link = document.head.querySelector<HTMLLinkElement>(selector);
@@ -162,9 +162,12 @@ export function CityPayProvider({
                      * src: 'https://dev.citypay.local:8080/loader/citypay.js',
                      *                         channel: 'local'
                      */
-                     const api = await CityPayPromise({
-                         debug: false,
-                    });
+
+                    const api = await CityPayPromise({
+                        channel: 'local',
+                        src: 'https://dev.citypay.local:8080/loader/citypay.js',
+                        debug: true,
+                    })
 
                     if (cancelled) {
                         return;
