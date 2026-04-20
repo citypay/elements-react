@@ -16,8 +16,14 @@ export function ChakraDemoProvider({
     chakraElementId,
     chakraLayout,
 }: Props) {
+
     return (
-        <CityPayProvider {...providerProps}>
+        <CityPayProvider
+            {...providerProps}
+            middleware={{
+                verifyAuth: '/api/verify-auth',
+            }}
+        >
             <ChakraElementProvider id="chakraform">
                 <ChakraElement
                     key={chakraElementId}

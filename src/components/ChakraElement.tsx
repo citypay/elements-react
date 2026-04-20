@@ -43,6 +43,7 @@ export const ChakraElement: React.FC<ChakraElementProps> = ({
 
     return <div style={{
         display: visible ? 'block' : 'none',
+        height: '100%',
         width: '100%',
         padding:' 1rem',
         borderRadius: '0.5rem',
