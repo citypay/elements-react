@@ -3,13 +3,15 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import {FlowElementOptions} from '@citypay/sdk';
+import {FlowOptions} from '@citypay/sdk';
 import {type CpeFormHandlers} from "@/components/useCardElement";
 import {useFlowElementContext} from "@/components/FlowElementProvider";
+import type {FlowType} from "@/components/checkout/types";
 
 export function useFlowElement(
     id: string,
-    baseOptions?: Omit<FlowElementOptions, 'identifier' | 'element'>,
+    flowType: FlowType,
+    baseOptions?: Omit<FlowOptions, 'identifier' | 'element'>,
     handlers?: CpeFormHandlers
 ) {
 
@@ -22,7 +24,7 @@ export function useFlowElement(
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
-    const options = useMemo<FlowElementOptions>(() => ({
+    const options = useMemo<FlowOptions>(() => ({
         identifier: id,
         ...(baseOptions ?? {}),
         element: `#cp-form-${id}`,
@@ -40,7 +42,7 @@ export function useFlowElement(
             const node = containerRef.current;
             const initOptions = node ? {...options, element: node as HTMLElement} : options;
 
-            elementCtx.ensureElement(initOptions, setState)
+            elementCtx.ensureElement(flowType, initOptions, setState)
                 .then(ref => {
                     setElementsInstance(ref);
                 })
@@ -61,7 +63,7 @@ export function useFlowElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementCtx, handlers]);
+    }, [providerStatus, providerError, options, elementCtx, flowType, handlers]);
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
@@ -72,7 +74,7 @@ export function useFlowElement(
             throw new Error('No opts provided');
         }
 
-        const {element} = opts as FlowElementOptions;
+        const {element} = opts as FlowOptions;
         console.log('>>>> flow elementsInstance', element)
 
         if (!element) {
