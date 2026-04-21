@@ -4,26 +4,11 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
+import type {CardElementOptions} from "@citypay/sdk";
 import {useCardElementContext} from "@/CardElementProvider";
+import {addApiListeners} from "@/Common";
 
-
-// extends CpeChangeState with access to the elements api
-export type ChangeState = {
-    elements: ElementsApi
-} & CpeChangeState
-
-export type CpeFormHandlers = {
-    onChange?: (c: ChangeState) => void
-    onReady?: (elements: ElementsApi) => void
-    onError?: (elements: ElementsApi | null, e: unknown) => void
-}
-
-export function useCardElement(
-    id: string,
-    baseOptions?: Omit<CardElementOptions, 'id' | 'element'>,
-    handlers?: CpeFormHandlers
-) {
+export function useCardElement(props: CardElementOptions) {
 
     const elementCtx = useCardElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
@@ -37,12 +22,6 @@ export function useCardElement(
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
-    const options = useMemo<CardElementOptions>(() => ({
-        id,
-        ...(baseOptions ?? {}),
-        element: `#cp-form-${id}`,
-    }), []);
-
     useEffect(() => {
         if (providerStatus !== 'cpp:ready') return;
 
@@ -54,14 +33,13 @@ export function useCardElement(
 
             const node = containerRef.current;
             // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
-            const initOptions = node ? { ...options, element: node as any } : options;
-
+            const initOptions = node ? { ...props, element: node as any } : props;
             elementCtx.ensureElement(initOptions, setState)
                 .then(ref => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    handlers?.onError?.(null, err);
+                    props?.onError?.(null, err);
                 });
         };
 
@@ -86,29 +64,15 @@ export function useCardElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementCtx, handlers]);
+    }, [providerStatus, providerError, props, elementCtx]);
 
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
-        const {opts, api} = elementsInstance;
+        const {api} = elementsInstance;
 
-        if(!opts) {
-            throw new Error('No opts provided');
-        }
-
-        const {element} = opts as CardElementOptions;
-        console.log('>>>> elementsInstance', element)
-
-        if (!element) {
-            throw new Error('No element provided');
-        }
-
-        if (handlers?.onChange) {
-            api.onChange(handlers.onChange);
-        }
-
+        addApiListeners(api, props)
     }, [elementsInstance])
 
     const api = useMemo(() => ({

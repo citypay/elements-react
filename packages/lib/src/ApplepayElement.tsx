@@ -1,38 +1,30 @@
 'use client';
 
 import React, {useMemo} from 'react';
-import {type AltPaymentOptions} from "@citypay/sdk";
-import {useApplepayElementIdentifier} from "@/ApplepayProvider";
-import {CpeApplePayHandlers, useApplepayElement} from "@/useApplePay";
+import {type AltPaymentOptions, ElementsApiListeners} from "@citypay/sdk";
+import {useApplepayElementContext} from "@/ApplepayProvider";
+import {useApplepayElement} from "@/useApplePay";
 import {useElementsStatus} from "@/CityPayProvider";
 
 export type ApplepayElementProps = {
-    options: Omit<AltPaymentOptions, 'identifier'>;
     visible?: boolean;
-} & CpeApplePayHandlers;
+} & Omit<AltPaymentOptions, 'identifier' | 'element'> & ElementsApiListeners
 
 
-export const ApplepayElement: React.FC<ApplepayElementProps> = ({
-                                                    options,
-                                                    onAuthoriseEnd,
-                                                    onError,
-                                                    visible = true,
-                                                }: ApplepayElementProps) => {
+export const ApplepayElement: React.FC<ApplepayElementProps> = (props: ApplepayElementProps) => {
 
-    const applepayIdentifier = useApplepayElementIdentifier()
+    const idCtx = useApplepayElementContext().identifier
 
-    const elementId = useMemo(() => {
-        return options.element.startsWith('#') ? options.element.slice(1) : options.element;
-        }, [options.element]);
+    const idDom = `cpe-${idCtx}`
 
     // Rebuild options with a normalised id string
-    const normalisedOptions = useMemo<AltPaymentOptions>(() => ({
-        ...options,
-        element: elementId,
-        identifier: applepayIdentifier
-    }), [options, elementId, applepayIdentifier]);
+    const normalisedProps = useMemo<ApplepayElementProps>(() => ({
+        ...props,
+        identifier: idCtx,
+        element: idDom,
+    }), [props, idDom]);
 
-    const {containerRef, state} = useApplepayElement(normalisedOptions, {onAuthoriseEnd, onError})
+    const {containerRef, state} = useApplepayElement(normalisedProps)
     const {status, error}  = useElementsStatus()
 
     if (status == 'cpp:initialising') {
@@ -52,5 +44,5 @@ export const ApplepayElement: React.FC<ApplepayElementProps> = ({
         </p> </>
     }
 
-    return <div style={{display: visible ? 'block' : 'none'}} id={elementId} ref={containerRef}></div>
+    return <div style={{display: props.visible ? 'block' : 'none'}} id={idDom} ref={containerRef}></div>
 }

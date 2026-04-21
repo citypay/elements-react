@@ -7,7 +7,7 @@
     "lib:build": "pnpm --filter '@citypay/elements-react' build",
     "demo:certs:bash": "pnpm -r certs:bash",
     "demo:certs:win": "pnpm -r certs:win",
-    "demo:dev": "pnpm --parallel --filter '@citypay/elements-react-demo' -- filter '@citypay/elements-demo-server' dev"
+    "demo:dev": "pnpm --parallel --filter '@citypay/elements-react-demo' --filter '@citypay/elements-demo-server' dev"
   },
   "dependencies": {
     "next": "16.0.7"

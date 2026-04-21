@@ -540,8 +540,10 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         {paymentMethod.id === 'credit-card-form' &&
                           <>
                             <CardForm refs={fieldsRefs}/>
-                            <CardFields refs={fieldsRefs} options={{identifier: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan', showCardIcon: true}}
-                            onChange={(c: any) => {
+                            <CardFields
+                                refs={fieldsRefs}
+                                showCardIcon={true}
+                                onChange={(c: any) => {
 
                                 function updateField(
                                     key: keyof typeof c,
@@ -611,24 +613,20 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                             </div>
                         )}
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
-                        {paymentMethod.id === 'credit-card' && (
                             <CardElement
+                                visible={paymentMethod.id === 'credit-card'}
                                 key={cardElementId}
-                                elementId={cardElementId}
-                                options={{
-                                    identifier: 'cardElement',
-                                    language: 'en',
-                                    layout: layout,
-                                    width: '100%',
-                                    theme: {
-                                        '--cpe-input-bg': '#ffffff',        // input bg
-                                        '--cpe-fg': '#6b7280',              // labels/other text
-                                        '--cpe-input-border': '#767676',    // input border
-                                        '--cpe-border': '#767676',          // general border (optional)
-                                        '--cpe-radius': '6px',              // widget border radius
-                                    },
-                                    cardSchemesDisplay: 'dynamic-inline'
+                                language={'en'}
+                                layout={layout}
+                                width={'100%'}
+                                theme={{
+                                    '--cpe-input-bg': '#ffffff',        // input bg
+                                    '--cpe-fg': '#6b7280',              // labels/other text
+                                    '--cpe-input-border': '#767676',    // input border
+                                    '--cpe-border': '#767676',          // general border (optional)
+                                    '--cpe-radius': '6px',              // widget border radius
                                 }}
+                                cardSchemesDisplay={'dynamic-inline'}
                                 onChange={async (cs) => {
                                     console.log('>>>onChange', cs)
                                     if (cs.complete) {
@@ -638,30 +636,33 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         setCardFormComplete(false)
                                     }
                                 }}
+                                onError={(api, err) => {console.error(`>>> onError handler ${api} | ${err}`)}}
                             />
-                        )}
 
-                        {paymentMethod.id === 'apple' && <ApplepayElement
-                                                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'},
-                                                                        appearance: {
-                                                                type: 'donate',
-                                                                            style: 'white'
-                                                                        }
-                        }}
-                                                            onAuthoriseEnd={async () => {
-                                                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
-                                                                const intentId = await elementsCtx?.getPaymentIntentId()
-                                                                if (!intentId) throw new Error('intentId is required')
-                                                                console.log('Verifying intent ', intentId)
-                                                                const v = await elementsCtx?.verifyPaymentIntentAuth()
-                                                                console.log('Verified intent ', v)
-                                                                if (v && v.status === 'success') {
-                                                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
-                                                                } else {
-                                                                    setPaymentError(`Payment verification failed`)
-                                                                }
-                                                            }}
-                                                            />}
+                        <ApplepayElement
+                            visible={paymentMethod.id === 'apple'}
+                            total={{
+                                amount: 1,
+                                label: 'GBP'
+                            }}
+                            appearance={{
+                                type: 'donate',
+                                style: 'white'
+                            }}
+                            onAuthoriseEnd={async () => {
+                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
+                                const intentId = await elementsCtx?.getPaymentIntentId()
+                                if (!intentId) throw new Error('intentId is required')
+                                console.log('Verifying intent ', intentId)
+                                const v = await elementsCtx?.verifyPaymentIntentAuth()
+                                console.log('Verified intent ', v)
+                                if (v && v.status === 'success') {
+                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
+                                } else {
+                                    setPaymentError(`Payment verification failed`)
+                                }
+                            }}
+                            />
                         {paymentMethod.id === 'google' && <p>Google TODO</p>}
                         <div className={"text-green-800"}>{ paymentComplete }</div>
                         <div className={"text-red-800"}>{ paymentError }</div>

@@ -3,18 +3,21 @@ import {CardFieldsElementOptions} from "@citypay/sdk"
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 
 export type CardFieldsContextShape = {
+    identifier: string
     getElement: () => ElementsInstance | null;
     ensureElement: (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
 }
 
 const CardFieldsContext = createContext<CardFieldsContextShape | null>(null);
 
-export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string}>) {
+export function CardFieldsProvider({identifier, children}: PropsWithChildren<{identifier?: string}>) {
 
     const elements = useElements()
     const elementInstances = useElementInstances()
 
     const elementInstance = useRef<ElementsInstance | null>(null);
+
+    const identifierSafe = identifier ?? 'default-cardfields'
 
     /**
      * Ensure a card fields element is mounted and ready.
@@ -35,7 +38,7 @@ export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string
         console.log('>> done')
         h("el:ready");
         const ref = {api: elementsApi, opts: opts};
-        elementInstances.set(id, ref)
+        elementInstances.set(identifierSafe, ref)
         elementInstance.current = ref
         return ref;
     };
@@ -43,6 +46,7 @@ export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string
     const getElement = () => { return elementInstance.current }
 
     const value = useMemo<CardFieldsContextShape>(() => ({
+        identifier: identifierSafe,
         getElement: getElement,
         ensureElement: ensureElement
     }), [elements]);

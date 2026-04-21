@@ -5,7 +5,7 @@ import {type HookState, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
 import {CardFieldsElementOptions} from "@citypay/sdk";
 import {useCardFieldsContext} from "@/CardFieldsProvider";
-import {CpeFormHandlers} from "@/useCardElement";
+import {addApiListeners} from "@/Common";
 
 export type FieldsReferences = {
     csc: RefObject<HTMLElement | null>;
@@ -14,11 +14,7 @@ export type FieldsReferences = {
     pan: RefObject<HTMLElement | null>;
 }
 
-export function useCardFields(
-    refs: FieldsReferences,
-    options: CardFieldsElementOptions,
-    handlers?: CpeFormHandlers
-) {
+export function useCardFields(refs: FieldsReferences, props: CardFieldsElementOptions,) {
 
     const elementCtx = useCardFieldsContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
@@ -37,7 +33,7 @@ export function useCardFields(
             if (cancelled) return;
 
             const optsWithElements: CardFieldsElementOptions = {
-                ...options,
+                ...props,
                 cscElement: refs.csc.current as HTMLElement,
                 expiryElement: refs.expiry.current as HTMLElement,
                 nameElement: refs.name.current as HTMLElement,
@@ -49,7 +45,7 @@ export function useCardFields(
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    handlers?.onError?.(null, err);
+                    props?.onError?.(null, err);
                 });
         };
 
@@ -67,29 +63,15 @@ export function useCardFields(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementCtx, handlers]);
-
+    }, [providerStatus, providerError, props, elementCtx]);
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
-        const {opts, api} = elementsInstance;
+        const {api} = elementsInstance;
 
-        if(!opts) {
-            throw new Error('No opts provided');
-        }
-
-        if (handlers?.onChange) {
-            api.onChange(handlers.onChange);
-        }
-        if (handlers?.onReady) {
-            api.onReady(handlers.onReady)
-        }
-        if (handlers?.onError) {
-            api.onError(handlers.onError)
-        }
-
-    }, [elementsInstance, handlers?.onChange, handlers?.onError, handlers?.onReady])
+        addApiListeners(api, props)
+    }, [elementsInstance])
 
     const api = useMemo(() => ({
         state,

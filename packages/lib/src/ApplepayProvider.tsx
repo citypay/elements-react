@@ -10,7 +10,7 @@ export type ApplepayElementContextShape = {
 
 const ApplepayElementContext = createContext<ApplepayElementContextShape | null>(null);
 
-export function ApplepayElementProvider({id, children}: PropsWithChildren<{id: string}>) {
+export function ApplepayElementProvider({identifier, children}: PropsWithChildren<{identifier?: string}>) {
 
     const elements = useElements()
     const elementInstances = useElementInstances()
@@ -18,6 +18,8 @@ export function ApplepayElementProvider({id, children}: PropsWithChildren<{id: s
     const elementInstance = useRef<ElementsInstance | null>(null);
 
     const inFlight = useRef<Map<string, Promise<ElementsInstance>>>(new Map());
+
+    const identifierSafe = identifier ?? 'default-applepay'
 
     /**
      * Ensure an Applepay element is mounted and ready.
@@ -29,46 +31,40 @@ export function ApplepayElementProvider({id, children}: PropsWithChildren<{id: s
 
         if (elementInstance.current) return elementInstance.current;
 
-        const existInRegistry = elementInstances.get(id);
+        const existInRegistry = elementInstances.get(identifierSafe);
         if (existInRegistry) {
             elementInstance.current = existInRegistry;
             return existInRegistry;
         }
 
-        const pending = inFlight.current.get(id);
+        const pending = inFlight.current.get(identifierSafe);
         if (pending) return pending;
-
-        // Create the form and push to the current refs..
-        const stableOpts = {
-            ...opts,
-            targetElement: opts.element,
-        }
 
         const p = (async () => {
             h('el:creating');
-            const elementsApi = elements.applePay(id, stableOpts)
+            const elementsApi = elements.applePay(opts)
             await elementsApi.init()
             await elementsApi.awaitReady()
             h("el:ready");
-            const ref = {api: elementsApi, opts: stableOpts};
-            elementInstances.set(id, ref)
+            const ref = {api: elementsApi, opts: opts};
+            elementInstances.set(identifierSafe, ref)
             elementInstance.current = ref;
             return ref;
         })().finally(() => {
-            inFlight.current.delete(id);
+            inFlight.current.delete(identifierSafe);
         });
 
-        inFlight.current.set(id, p);
+        inFlight.current.set(identifierSafe, p);
         return p;
     };
 
     const getElement = () => { return elementInstance.current }
 
     const value = useMemo<ApplepayElementContextShape>(() => ({
-        identifier: id,
+        identifier: identifierSafe,
         getElement: getElement,
         ensureElement: ensureElement
-    }), [elements, id]);
+    }), [elements, identifier]);
 
     return (
         <ApplepayElementContext.Provider value={value}>{children}</ApplepayElementContext.Provider>
@@ -80,10 +76,4 @@ export function useApplepayElementContext() {
     const ctx = useContext(ApplepayElementContext);
     if (!ctx) throw new Error('useCardElement must be used within an <ApplepayElementContext>');
     return ctx
-}
-
-export function useApplepayElementIdentifier() {
-    const ctx = useContext(ApplepayElementContext);
-    if (!ctx) throw new Error('useCardElement must be used within an <ApplepayElementContext>');
-    return ctx.identifier
 }

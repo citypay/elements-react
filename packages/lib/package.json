@@ -34,7 +34,7 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "@citypay/sdk": "2.0.5"
+    "@citypay/sdk": "2.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

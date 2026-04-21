@@ -3,26 +3,11 @@
 import {SetStateAction, useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from '@/CityPayProvider';
 import type {ElementsInstance} from '@/CityPayProvider';
-import type {AltPaymentOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
 import {useApplepayElementContext} from "@/ApplepayProvider";
+import {ApplepayElementProps} from "@/ApplepayElement";
+import {addApiListeners} from "@/Common";
 
-
-// extends CpeChangeState with access to the elements api
-export type ChangeState = {
-    elements: ElementsApi
-} & CpeChangeState
-
-export type CpeApplePayHandlers = {
-    // onChange?: (c: ChangeState) => void
-    // onReady?: (elements: ElementsApi) => void
-    onAuthoriseEnd?: (elements: ElementsApi) => void
-    onError?: (elements: ElementsApi | null, e: unknown) => void
-}
-
-export function useApplepayElement(
-    options: AltPaymentOptions,
-    handlers?: CpeApplePayHandlers
-) {
+export function useApplepayElement(props: ApplepayElementProps) {
 
     const elementsRef = useApplepayElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
@@ -44,12 +29,12 @@ export function useApplepayElement(
         const init = () => {
             if (cancelled) return;
 
-            elementsRef.ensureElement(options, setState)
+            elementsRef.ensureElement(props, setState)
                 .then((ref: SetStateAction<ElementsInstance | undefined>) => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    handlers?.onError?.(null, err);
+                    props?.onError?.(null, err);
                 });
         };
 
@@ -74,23 +59,14 @@ export function useApplepayElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementsRef]);
+    }, [providerStatus, providerError, props, elementsRef]);
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
 
-        const {opts, api} = elementsInstance;
-        const {element} = opts;
-        console.log('>>>> elementsInstance', element)
+        const {api} = elementsInstance;
 
-        if (!element) {
-            throw new Error('No element provided');
-        }
-
-        if (handlers?.onAuthoriseEnd) {
-            api.onAuthoriseEnd(handlers?.onAuthoriseEnd)
-        }
-
+        addApiListeners(api, props)
     }, [elementsInstance])
 
     const api = useMemo(() => ({
