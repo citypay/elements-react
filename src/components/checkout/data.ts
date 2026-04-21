@@ -33,7 +33,7 @@ export const paymentMethods: PaymentMethod[] = [
     {id: 'credit-card-form', title: 'CCForm'},
     {id: 'apple', title: 'ApplePay'},
     {id: 'google', title: 'GooglePay'},
-    {id: 'flow', title: 'Flow'},
+    {id: 'flow', title: 'Flows'},
 ];
 
 export const widgetLayoutOptions: Array<{value: WidgetLayout; label: string}> = [
@@ -48,7 +48,7 @@ export const widgetLayoutOptions: Array<{value: WidgetLayout; label: string}> = 
 
 export const flowTypes: Array<{value: FlowType; label: string}> = [
     {value: 'verify', label: 'Verify'},
-    {value: 'pay', label: 'Pay'},
+    {value: 'payment', label: 'Payment'},
 ];
 
 export const flowTypeDescriptions: Record<FlowType, {title: string; body: string}> = {
@@ -56,7 +56,7 @@ export const flowTypeDescriptions: Record<FlowType, {title: string; body: string
         title: 'Verify flow',
         body: 'Use this flow to collect and verify payment details for later use before checkout, and the user can set the card as the default for future use.',
     },
-    pay: {
+    payment: {
         title: 'Pay flow',
         body: 'Use this flow to collect payment details for an immediate payment while also verifying and saving the card for future use. It is suited to direct checkout, and the user can set the card as the default for future use.',
     },

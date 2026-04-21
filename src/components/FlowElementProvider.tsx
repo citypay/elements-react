@@ -1,12 +1,13 @@
 import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
-import {FlowElementOptions} from '@citypay/sdk';
+import {FlowOptions} from '@citypay/sdk';
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useRef} from "react";
+import type {FlowType} from "@/components/checkout/types";
 
 const FLOW_READY_TIMEOUT_MS = 10000;
 
 export type FlowElementContextShape = {
     getElement: () => ElementsInstance | null;
-    ensureElement: (opts: FlowElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
+    ensureElement: (flowType: FlowType, opts: FlowOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
 }
 
 const FlowElementContext = createContext<FlowElementContextShape | null>(null);
@@ -18,7 +19,11 @@ export function FlowElementProvider({id, children}: PropsWithChildren<{id: strin
 
     const elementInstance = useRef<ElementsInstance | null>(null);
 
-    const ensureElement = async (opts: FlowElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
+    const ensureElement = async (
+        flowType: FlowType,
+        opts: FlowOptions,
+        h: Dispatch<SetStateAction<HookState>>
+    ) => {
         if (!elements) throw new Error('Elements not ready');
 
         const stableOpts = {
@@ -27,13 +32,15 @@ export function FlowElementProvider({id, children}: PropsWithChildren<{id: strin
         }
 
         h('el:creating');
-        const elementsApi = elements.flowElement(stableOpts);
+        const elementsApi = flowType === 'payment'
+            ? elements.paymentFlow(stableOpts)
+            : elements.verifyFlow(stableOpts);
         await elementsApi.init()
         await Promise.race([
             elementsApi.awaitReady(),
             new Promise<never>((_, reject) => {
                 setTimeout(() => {
-                    reject(new Error('Flow iframe did not become ready. Check that the Flow route is available on the elements host.'));
+                    reject(new Error('Flow iframe did not become ready. Check that the Flows route is available on the elements host.'));
                 }, FLOW_READY_TIMEOUT_MS);
             })
         ])

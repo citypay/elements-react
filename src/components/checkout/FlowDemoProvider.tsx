@@ -28,9 +28,9 @@ export function FlowDemoProvider({
                 <FlowElement
                     key={flowElementId}
                     elementId={flowElementId}
+                    flowType={flowType}
                     options={{
                         language: 'en',
-                        flow: flowType,
                         width: '100%',
                         showDefaultCardOption: true,
                         defaultCardChecked: false,

@@ -6,7 +6,7 @@ export type SharedProviderProps = Pick<
     'pubKey' | 'createServerIntent'
 >;
 
-export type FlowType = 'verify' | 'pay';
+export type FlowType = 'verify' | 'payment';
 
 export type WidgetLayout =
     | 'stack'

@@ -12,7 +12,7 @@ import React, {
 import {
     AltPaymentOptions,
     CardElementOptions,
-    FlowElementOptions,
+    FlowOptions,
     CardFieldsElementOptions,
     CityPayElements,
     CityPayPromise,
@@ -67,7 +67,7 @@ export type CityPayProviderProps = PropsWithChildren<{
 
 export type ElementsInstance = {
     api: ElementsApi;
-    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions | FlowElementOptions;
+    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions | FlowOptions;
 }
 
 function initPreconnect() {
