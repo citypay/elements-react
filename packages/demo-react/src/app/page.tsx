@@ -636,7 +636,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         setCardFormComplete(false)
                                     }
                                 }}
-                                onError={(api, err) => {console.error(`>>> onError handler ${api} | ${err}`)}}
+                                onError={(err: unknown) => {console.error(`>>> onError handler: ${JSON.stringify(err)}`)}}
                             />
 
                         <ApplepayElement
@@ -680,8 +680,6 @@ export default function ExamplePage() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
 
-    const [applepayIdentifier, ] = useState<string>(`applepay-${Math.random().toPrecision(5)}`)
-
     useEffect(() => {
         ServerConnection.checkServerConnection()
             .then(() => {
@@ -706,9 +704,9 @@ export default function ExamplePage() {
                          middleware={{
                             verifyAuth: '/api/verify-auth'
                          }}>
-            <ApplepayElementProvider id={applepayIdentifier}>
-            <CardElementProvider id={'cardform'} >
-            <CardFieldsProvider id={'cardfields'}>
+            <ApplepayElementProvider identifier={'applepay'}>
+            <CardElementProvider identifier={'cardform'} >
+            <CardFieldsProvider identifier={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
             </CardFieldsProvider>
             </CardElementProvider>
