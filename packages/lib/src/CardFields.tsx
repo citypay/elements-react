@@ -1,29 +1,18 @@
 'use client';
 
-import React, {useMemo} from 'react';
+import React from 'react';
 import {CardFieldsElementOptions, ElementsApiListeners} from "@citypay/sdk";
 import {useElementsStatus} from "@/CityPayProvider";
 import {FieldsReferences, useCardFields} from "@/useCardFields";
-import {useCardFieldsContext} from "@/CardFieldsProvider";
 
 export type CardFieldsProps = {
     refs: FieldsReferences;
 } & Omit<CardFieldsElementOptions, 'identifier'> & ElementsApiListeners;
 
 
-export const CardFields: React.FC<CardFieldsProps> = ({refs, ...props}: CardFieldsProps) => {
+export const CardFields: React.FC<CardFieldsProps> = (props: CardFieldsProps) => {
 
-    const idCtx = useCardFieldsContext().identifier
-
-    // Defer adding the field refs as they may not exist yet
-    const propsWithId: CardFieldsElementOptions = useMemo(() => {
-        return {
-            ...props,
-            identifier: idCtx
-        }
-    }, [idCtx, props])
-
-    useCardFields(refs, propsWithId)
+    useCardFields(props)
     const {status, error}  = useElementsStatus()
 
     if (status == 'cpp:initialising') {

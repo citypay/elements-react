@@ -6,6 +6,7 @@ import type {ElementsInstance} from './CityPayProvider';
 import {CardFieldsElementOptions} from "@citypay/sdk";
 import {useCardFieldsContext} from "@/CardFieldsProvider";
 import {addApiListeners} from "@/Common";
+import {CardFieldsProps} from "@/CardFields";
 
 export type FieldsReferences = {
     csc: RefObject<HTMLElement | null>;
@@ -14,7 +15,7 @@ export type FieldsReferences = {
     pan: RefObject<HTMLElement | null>;
 }
 
-export function useCardFields(refs: FieldsReferences, props: CardFieldsElementOptions,) {
+export function useCardFields(props: CardFieldsProps) {
 
     const elementCtx = useCardFieldsContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
@@ -34,10 +35,11 @@ export function useCardFields(refs: FieldsReferences, props: CardFieldsElementOp
 
             const optsWithElements: CardFieldsElementOptions = {
                 ...props,
-                cscElement: refs.csc.current as HTMLElement,
-                expiryElement: refs.expiry.current as HTMLElement,
-                nameElement: refs.name.current as HTMLElement,
-                panElement: refs.pan.current as HTMLElement,
+                identifier: elementCtx.identifier,
+                cscElement: props.refs.csc.current as HTMLElement,
+                expiryElement: props.refs.expiry.current as HTMLElement,
+                nameElement: props.refs.name.current as HTMLElement,
+                panElement: props.refs.pan.current as HTMLElement,
             }
 
             elementCtx.ensureElement(optsWithElements, setState)
@@ -45,11 +47,11 @@ export function useCardFields(refs: FieldsReferences, props: CardFieldsElementOp
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    props?.onError?.(null, err);
+                    props?.onError?.(err);
                 });
         };
 
-        if (!(Object.values(refs).every(r => r.current !== null))){
+        if (!(Object.values(props.refs).every(r => r.current !== null))){
             // Defer until after the ref attaches (commit phase)
             timeoutId = setTimeout(init, 0);
         } else {

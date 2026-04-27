@@ -7,14 +7,14 @@ import type {ElementsInstance} from './CityPayProvider';
 import type {CardElementOptions} from "@citypay/sdk";
 import {useCardElementContext} from "@/CardElementProvider";
 import {addApiListeners} from "@/Common";
+import {CardElementProps} from "@/CardElement";
 
-export function useCardElement(props: CardElementOptions) {
+export function useCardElement(props: CardElementProps) {
 
     const elementCtx = useCardElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const formRef = useRef<any | null>(null);
     const mountedRef = useRef<boolean>(false);
 
     // const [form, setForm] = useState<any>();
@@ -31,15 +31,20 @@ export function useCardElement(props: CardElementOptions) {
         const init = () => {
             if (cancelled) return;
 
-            const node = containerRef.current;
-            // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
-            const initOptions = node ? { ...props, element: node as any } : props;
-            elementCtx.ensureElement(initOptions, setState)
+            if (!containerRef.current) throw new Error('No container available')
+
+            const elementOpts: CardElementOptions = {
+                ...props,
+                identifier: elementCtx.identifier,
+                element: containerRef.current
+            }
+
+            elementCtx.ensureElement(elementOpts, setState)
                 .then(ref => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    props?.onError?.(null, err);
+                    props.onError?.(err);
                 });
         };
 
@@ -54,13 +59,7 @@ export function useCardElement(props: CardElementOptions) {
         return () => {
             cancelled = true;
             if (timeoutId) clearTimeout(timeoutId);
-            try {
-                formRef.current?.unmount?.();
-                formRef.current?.destroy?.();
-            } catch {
-            }
             mountedRef.current = false;
-            formRef.current = null;
             setState("el:idle");
             setError(null);
         };

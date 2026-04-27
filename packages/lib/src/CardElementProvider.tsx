@@ -26,9 +26,6 @@ export function CardElementProvider({identifier, children}: PropsWithChildren<{i
      */
     const ensureElement = async (opts: CardElementOptions, h: Dispatch<SetStateAction<HookState>>) => {
         if (!elements) throw new Error('Elements not ready');
-        // const existing = elementRefs.current.get(opts.id);
-        // if (existing) return existing;
-
 
         h('el:creating');
         const elementsApi = elements.cardElement(opts);

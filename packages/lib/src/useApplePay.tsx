@@ -6,14 +6,14 @@ import type {ElementsInstance} from '@/CityPayProvider';
 import {useApplepayElementContext} from "@/ApplepayProvider";
 import {ApplepayElementProps} from "@/ApplepayElement";
 import {addApiListeners} from "@/Common";
+import {AltPaymentOptions} from "@citypay/sdk";
 
 export function useApplepayElement(props: ApplepayElementProps) {
 
-    const elementsRef = useApplepayElementContext();
+    const elementCtx = useApplepayElementContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const formRef = useRef<any | null>(null);
     const mountedRef = useRef<boolean>(false);
 
     const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
@@ -29,12 +29,20 @@ export function useApplepayElement(props: ApplepayElementProps) {
         const init = () => {
             if (cancelled) return;
 
-            elementsRef.ensureElement(props, setState)
+            if (!containerRef.current) throw new Error('No container available')
+
+            const elementOpts: AltPaymentOptions = {
+                ...props,
+                identifier: elementCtx.identifier,
+                element: containerRef.current
+            }
+
+            elementCtx.ensureElement(elementOpts, setState)
                 .then((ref: SetStateAction<ElementsInstance | undefined>) => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    props?.onError?.(null, err);
+                    props?.onError?.(err);
                 });
         };
 
@@ -49,17 +57,11 @@ export function useApplepayElement(props: ApplepayElementProps) {
         return () => {
             cancelled = true;
             if (timeoutId) clearTimeout(timeoutId);
-            try {
-                formRef.current?.unmount?.();
-                formRef.current?.destroy?.();
-            } catch {
-            }
             mountedRef.current = false;
-            formRef.current = null;
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, props, elementsRef]);
+    }, [providerStatus, providerError, props, elementCtx]);
 
     useEffect(() => {
         if (!elementsInstance || !window) return;
