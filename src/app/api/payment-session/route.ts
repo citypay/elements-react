@@ -27,7 +27,8 @@ export async function POST() {
     try {
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            amount: 7552,
+            account_id: "123",
+            amount: 0,
             currency: "GBP",
             identifier: `cart-id-${crypto.randomUUID()}`,
             billTo: {
@@ -40,6 +41,15 @@ export async function POST() {
                 address3: "Example County",
                 country: "GB",
                 postcode: "JE3 3QA"
+            },
+            recurringIntent: {
+                count: 12,
+                endDate: "2026-12-31",
+                fixedAmount: true,
+                fixedSchedule: true,
+                intervalDays: 30,
+                nextDate: "2026-04-01",
+                recurringAmount: 999
             }
         }, {
             // idempotencyKey: "unique-idempotency-key"
