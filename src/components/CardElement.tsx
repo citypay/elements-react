@@ -13,23 +13,23 @@ export type CardElementProps = {
 
 
 export const CardElement: React.FC<CardElementProps> = ({
-                                                    elementId,
-                                                    options,
-                                                    onChange,
-                                                    onReady,
-                                                    onError,
-                                                    visible = true,
-                                                }: CardElementProps) => {
+                                                            elementId,
+                                                            options,
+                                                            onChange,
+                                                            onReady,
+                                                            onError,
+                                                            visible = true,
+                                                        }: CardElementProps) => {
     const id = elementId ?? 'default';
     const {containerRef} = useCardElement(id, options, {onChange, onReady, onError})
-    const {status, error}  = useElementsStatus()
+    const {status, error} = useElementsStatus()
 
     if (status == 'cpp:initialising') {
-        return <>init...</>
+        return <>card element init...</>
     }
 
     if (status == 'cpp:idle') {
-        return <>idle...</>
+        return <>card element idle...</>
     }
 
     if (status == 'cpp:error') {
@@ -41,5 +41,11 @@ export const CardElement: React.FC<CardElementProps> = ({
         </p> </>
     }
 
-    return <div style={{width: '100%'}} id={`cp-form-${id}`} ref={containerRef}></div>
+    return <>
+        <div style={{width: '100%'}} id={id} ref={containerRef}>
+            {/*<p>id: {id}</p>*/}
+            {/*<p>status: {status}</p>*/}
+            {/*<p>visible: {JSON.stringify(visible)}</p>*/}
+        </div>
+    </>
 }

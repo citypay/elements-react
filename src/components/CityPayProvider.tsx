@@ -133,6 +133,10 @@ export function CityPayProvider({
     useEffect(initPreconnect, []);
 
     useEffect(() => {
+        console.log(`status updated ${status}`)
+    }, [status]);
+
+    useEffect(() => {
         let cancelled = false;
 
         if (!pubKey) {
@@ -167,7 +171,7 @@ export function CityPayProvider({
                     });
 
                     if (cancelled) {
-                        console.log("Cancelled...")
+                        console.log(`Cancelled... ${pubKey} <<`)
                         return;
                     }
 
@@ -176,8 +180,9 @@ export function CityPayProvider({
                         createServerIntent,
                         eager: true,
                         middleware: middleware,
-                        sandbox: true,
-                        demo: true
+                        demo: {
+                            enabled: true
+                        }
                     });
                     setStatus('cpp:ready');
                 }
@@ -190,10 +195,10 @@ export function CityPayProvider({
                 setStatus('cpp:error');
             }
         })()
-        // return () => {
-        //     console.debug("Cancellation called")
-        //     cancelled = true;
-        // };
+        return () => {
+            console.debug("Cancellation called")
+            cancelled = true;
+        };
     }, [pubKey]);
 
     useEffect(() => {
@@ -212,6 +217,7 @@ export function CityPayProvider({
 
     return (
         <>
+            <code>${JSON.stringify(status)}</code>
             <CityPayContext.Provider value={value}>{children}</CityPayContext.Provider>
         </>
     );

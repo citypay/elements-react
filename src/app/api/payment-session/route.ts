@@ -21,7 +21,7 @@ export async function POST() {
     }
 
     const citypay = new CityPay(clientId, licenceKey, {
-        // sandbox: true,
+        sandbox: true,
     })
 
 

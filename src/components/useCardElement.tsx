@@ -39,12 +39,16 @@ export function useCardElement(
 
     const options = useMemo<CardElementOptions>(() => ({
         id,
+        identifier: id,
         ...(baseOptions ?? {}),
         element: `#cp-form-${id}`,
     }), []);
 
     useEffect(() => {
-        if (providerStatus !== 'cpp:ready') return;
+        if (providerStatus !== 'cpp:ready') {
+            console.debug('not ready')
+            return;
+        }
 
         let cancelled = false;
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -115,6 +119,8 @@ export function useCardElement(
         state,
         error,
     }), [state, error]);
+
+    console.log('useCardElement', containerRef, api)
 
     return {containerRef, ...api};
 }

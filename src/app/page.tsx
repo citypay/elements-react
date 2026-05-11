@@ -553,46 +553,56 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         </div>
 
                         {paymentMethod.id === 'credit-card-form' &&
-                          <>
-                            <CardForm refs={fieldsRefs}/>
-                            <CardFields refs={fieldsRefs} options={{id: 'cardfields', cscElement: '#cf-csc', expiryElement: '#cf-expiry', nameElement: '#cf-name', panElement: '#cf-pan'}}
-                            onChange={(c) => {
+                            <>
+                                <CardForm refs={fieldsRefs}/>
+                                <CardFields refs={fieldsRefs} options={{
+                                    id: 'cardfields',
+                                    cscElement: '#cf-csc',
+                                    expiryElement: '#cf-expiry',
+                                    nameElement: '#cf-name',
+                                    panElement: '#cf-pan'
+                                }}
+                                            onChange={(c) => {
 
-                                function updateField(
-                                    key: keyof typeof c,
-                                    wrapId: string,
-                                    labelId: string,
-                                    baseLabel: string
-                                ) {
-                                    const wrap = document.getElementById(wrapId)
-                                    const label = document.getElementById(labelId)
-                                    const field = c[key] as { message?: string; valid: boolean; requested: boolean; }
-                                    const isInvalid = field && !field.valid
+                                                function updateField(
+                                                    key: keyof typeof c,
+                                                    wrapId: string,
+                                                    labelId: string,
+                                                    baseLabel: string
+                                                ) {
+                                                    const wrap = document.getElementById(wrapId)
+                                                    const label = document.getElementById(labelId)
+                                                    const field = c[key] as {
+                                                        message?: string;
+                                                        valid: boolean;
+                                                        requested: boolean;
+                                                    }
+                                                    const isInvalid = field && !field.valid
 
-                                    if (wrap) {
-                                        wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"
-                                    }
+                                                    if (wrap) {
+                                                        wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"
+                                                    }
 
-                                    if (label) {
-                                        label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel
-                                        label.style.color = isInvalid ? "red" : "#64748b"
-                                    }
-                                }
+                                                    if (label) {
+                                                        label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel
+                                                        label.style.color = isInvalid ? "red" : "#64748b"
+                                                    }
+                                                }
 
-                                updateField("csc", "csc-wrap", "csc-label", "CSC")
-                                updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")
-                                updateField("name", "name-wrap", "name-label", "Name on card")
-                                updateField("pan", "pan-wrap", "pan-label", "Card number")
+                                                updateField("csc", "csc-wrap", "csc-label", "CSC")
+                                                updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")
+                                                updateField("name", "name-wrap", "name-label", "Name on card")
+                                                updateField("pan", "pan-wrap", "pan-label", "Card number")
 
 
-                                if (c.complete) {
-                                    console.log('CardFields complete')
-                                    setCardFieldsComplete(true)
-                                } else {
-                                    setCardFieldsComplete(false)
-                                }
-                            }}/>
-                        </>
+                                                if (c.complete) {
+                                                    console.log('CardFields complete')
+                                                    setCardFieldsComplete(true)
+                                                } else {
+                                                    setCardFieldsComplete(false)
+                                                }
+                                            }}/>
+                            </>
                         }
                         {paymentMethod.id === 'credit-card' && (
                             <div className="mt-4 mb-8">
@@ -627,52 +637,53 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         )}
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
                         {paymentMethod.id === 'credit-card' && (
-                            <CardElement
-                                key={cardElementId}
-                                elementId={cardElementId}
-                                options={{
-                                    language: 'en',
-                                    layout: layout,
-                                    width: '100%',
-                                    theme: {
-                                        '--cpe-input-bg': '#ffffff',        // input bg
-                                        '--cpe-fg': '#6b7280',              // labels/other text
-                                        '--cpe-input-border': '#767676',    // input border
-                                        '--cpe-border': '#767676',          // general border (optional)
-                                        '--cpe-radius': '6px',              // widget border radius
-                                    }
-                                }}
-                                onChange={async (cs) => {
-                                    console.log('>>>onChange', cs)
-                                    if (cs.complete) {
-                                        console.log('>>>complete')
-                                        setCardFormComplete(true)
-                                    } else {
-                                        setCardFormComplete(false)
-                                    }
-                                }}
-                            />
+                            <>
+                                <CardElement
+                                    key={cardElementId}
+                                    elementId={cardElementId}
+                                    options={{
+                                        language: 'en',
+                                        layout: layout,
+                                        width: '100%',
+                                        theme: {
+                                            '--cpe-input-bg': '#ffffff',        // input bg
+                                            '--cpe-fg': '#6b7280',              // labels/other text
+                                            '--cpe-input-border': '#767676',    // input border
+                                            '--cpe-border': '#767676',          // general border (optional)
+                                            '--cpe-radius': '6px',              // widget border radius
+                                        }
+                                    }}
+                                    onChange={async (cs) => {
+                                        console.log('>>>onChange', cs)
+                                        if (cs.complete) {
+                                            console.log('>>>complete')
+                                            setCardFormComplete(true)
+                                        } else {
+                                            setCardFormComplete(false)
+                                        }
+                                    }}
+                                /></>
                         )}
 
                         {paymentMethod.id === 'apple' && <ApplepayElement
-                                                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
-                                                            onAuthoriseEnd={async () => {
-                                                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
-                                                                const intentId = await elementsCtx?.getPaymentIntentId()
-                                                                if (!intentId) throw new Error('intentId is required')
-                                                                console.log('Verifying intent ', intentId)
-                                                                const v = await elementsCtx?.verifyPaymentIntentAuth()
-                                                                console.log('Verified intent ', v)
-                                                                if (v && v.status === 'success') {
-                                                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
-                                                                } else {
-                                                                    setPaymentError(`Payment verification failed`)
-                                                                }
-                                                            }}
-                                                            />}
+                            options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
+                            onAuthoriseEnd={async () => {
+                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
+                                const intentId = await elementsCtx?.getPaymentIntentId()
+                                if (!intentId) throw new Error('intentId is required')
+                                console.log('Verifying intent ', intentId)
+                                const v = await elementsCtx?.verifyPaymentIntentAuth()
+                                console.log('Verified intent ', v)
+                                if (v && v.status === 'success') {
+                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
+                                } else {
+                                    setPaymentError(`Payment verification failed`)
+                                }
+                            }}
+                        />}
                         {paymentMethod.id === 'google' && <p>Google TODO</p>}
-                        <div className={"text-green-800"}>{ paymentComplete }</div>
-                        <div className={"text-red-800"}>{ paymentError }</div>
+                        <div className={"text-green-800"}>{paymentComplete}</div>
+                        <div className={"text-red-800"}>{paymentError}</div>
 
 
                     </div>
@@ -687,7 +698,7 @@ export default function ExamplePage() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
 
-    const [applepayIdentifier, ] = useState<string>(`applepay-${Math.random().toPrecision(5)}`)
+    const [applepayIdentifier,] = useState<string>(`applepay-${Math.random().toPrecision(5)}`)
 
     useEffect(() => {
         fetch('/api/payment-session', {
@@ -718,14 +729,14 @@ export default function ExamplePage() {
                              return paymentSession;
                          }}
                          middleware={{
-                            verifyAuth: '/api/verify-auth'
+                             verifyAuth: '/api/verify-auth'
                          }}>
             <ApplepayElementProvider id={applepayIdentifier}>
-            <CardElementProvider id={'cardform'} >
-            <CardFieldsProvider id={'cardfields'}>
-                <FormExample paymentSession={paymentSession} />
-            </CardFieldsProvider>
-            </CardElementProvider>
+                <CardElementProvider id={'cardform'}>
+                    <CardFieldsProvider id={'cardfields'}>
+                        <FormExample paymentSession={paymentSession}/>
+                    </CardFieldsProvider>
+                </CardElementProvider>
             </ApplepayElementProvider>
         </CityPayProvider>
     </>
