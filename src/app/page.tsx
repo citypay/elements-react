@@ -1,6 +1,6 @@
 'use client'
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
-import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
+import {ArrowPathIcon, CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
 import {useEffect, useRef, useState} from "react";
 import {CityPayProvider, useElements} from "@/components/CityPayProvider";
 import {CardElement} from "@/components/CardElement";
@@ -45,6 +45,12 @@ const paymentMethods = [
     {id: 'apple', title: 'ApplePay'},
     {id: 'google', title: 'GooglePay'},
 ]
+const widgetLayouts = ['stack', 'stack-compact', 'row-minimal', 'row-compact', 'row', 'column-compact', 'column'] as const;
+type WidgetLayout = typeof widgetLayouts[number];
+
+function isWidgetLayout(value: string): value is WidgetLayout {
+    return (widgetLayouts as readonly string[]).includes(value);
+}
 
 
 function ContactInfo() {
@@ -233,7 +239,8 @@ function ShippingInfo() {
     )
 }
 
-function OrderSummary({formDisabled}: { formDisabled: boolean }) {
+function OrderSummary({formDisabled, isSubmitting}: { formDisabled: boolean; isSubmitting: boolean }) {
+    const isDisabled = formDisabled || isSubmitting;
 
     return (
         <>
@@ -328,16 +335,52 @@ function OrderSummary({formDisabled}: { formDisabled: boolean }) {
                     <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                         <button
                             type="submit"
-                            disabled={formDisabled}
-                            className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden disabled:opacity-50"
+                            disabled={isDisabled}
+                            aria-busy={isSubmitting}
+                            className="flex w-full items-center justify-center gap-2 rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-xs hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            Confirm order
+                            {isSubmitting && <ArrowPathIcon aria-hidden="true" className="size-5 animate-spin"/>}
+                            {isSubmitting ? 'Processing...' : 'Confirm order'}
                         </button>
                     </div>
                 </div>
             </div>
         </>
     )
+}
+
+function getPaymentErrorMessage(err: unknown) {
+    if (err instanceof Error && err.message) {
+        return err.message;
+    }
+
+    if (typeof err === 'string') {
+        return err;
+    }
+
+    if (err && typeof err === 'object') {
+        const maybeError = err as { message?: unknown; error?: { message?: unknown } };
+
+        if (typeof maybeError.error?.message === 'string') {
+            return maybeError.error.message;
+        }
+
+        if (typeof maybeError.message === 'string') {
+            return maybeError.message;
+        }
+    }
+
+    return 'Unknown payment processing error';
+}
+
+function getTokenValue(tokenResult: { token?: unknown; data?: { token?: unknown } }) {
+    const token = tokenResult.token ?? tokenResult.data?.token;
+
+    if (typeof token !== 'string' || !token) {
+        throw new Error('Tokenise completed but did not return a payment token');
+    }
+
+    return token;
 }
 
 function Delivery() {
@@ -392,11 +435,12 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
-    const [layout, setLayout] = useState<'stack' | 'stack-compact' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'>('stack');
+    const [layout, setLayout] = useState<WidgetLayout>('stack');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
     const [cardElementNonce, setCardElementNonce] = useState(0);
+    const isSubmittingRef = useRef(false);
     const cardElementId = `cardform-${layout}-${cardElementNonce}`;
     const fieldsRefs: FieldsReferences = {
         csc: useRef(null),
@@ -429,6 +473,10 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if (isSubmittingRef.current) {
+            return;
+        }
+
         const api = getActiveApi();
         if (!api) {
             console.warn(`Aborting submit as instances not ready`);
@@ -436,15 +484,19 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
         } // not ready yet
 
         try {
+            isSubmittingRef.current = true;
             setIsSubmitting(true);
+            setPaymentError(undefined);
+            setPaymentComplete(undefined);
 
             // 1) Create a token from the mounted card element(s)
             const tokenResult = await api.tokenise();
+            const token = getTokenValue(tokenResult);
             // console.log('>>> tokenResult:', tokenResult);
 
             // 2) Attach token to an intent (if your flow uses intents)
             const attachResult = await api.attach({
-                token: tokenResult.token,
+                token,
                 select: true,
                 intentId: paymentSession.paymentIntentId
             });
@@ -460,7 +512,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                 setPaymentError(confirmResult.error.message);
             } else if (confirmResult.status == 'requires_authorisation') {
                 // now present for authorisation
-                fetch('/api/auth', {
+                const resp = await fetch('/api/auth', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -468,32 +520,33 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                     body: JSON.stringify({
                         intentId: paymentSession.paymentIntentId
                     })
-                }).then(async (resp) => {
+                });
 
-                    const auth = await resp.json()
-                    console.log(auth);
+                const auth = await resp.json()
+                console.log(auth);
 
-                    if (auth.authorised) {
-                        setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verifying auth...`)
+                if (!resp.ok) {
+                    throw new Error(auth?.error ?? auth?.message ?? `Authorisation request failed with HTTP ${resp.status}`);
+                }
 
-                        const intentId = await elementsCtx?.getPaymentIntentId()
-                        if (!intentId) throw new Error('intentId is required')
-                        console.log('Verifying intent ', intentId)
-                        const v: VerifyAuthResponse | undefined = await elementsCtx?.verifyPaymentIntentAuth()
-                        console.log('Verify intent result ', v)
+                if (auth.authorised) {
+                    setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verifying auth...`)
 
-                        if (v && v.status === 'success') {
-                            setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verified auth: ${v.auth.authcode}`)
-                        } else {
-                            setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
-                        }
+                    const intentId = await elementsCtx?.getPaymentIntentId()
+                    if (!intentId) throw new Error('intentId is required')
+                    console.log('Verifying intent ', intentId)
+                    const v: VerifyAuthResponse | undefined = await elementsCtx?.verifyPaymentIntentAuth()
+                    console.log('Verify intent result ', v)
 
+                    if (v && v.status === 'success') {
+                        setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verified auth: ${v.auth.authcode}`)
                     } else {
                         setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
                     }
 
-
-                })
+                } else {
+                    setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`)
+                }
             }
 
             // Handle success UI...
@@ -501,8 +554,9 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
             // Show error UI...
             // 2. or by catching the error on the elements function calls
             console.error('>>> Error during payment processing:', err);
-            setPaymentError('Error during payment processing')
+            setPaymentError(`Error during payment processing: ${getPaymentErrorMessage(err)}`)
         } finally {
+            isSubmittingRef.current = false;
             setIsSubmitting(false);
         }
     }
@@ -614,19 +668,21 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         id="layout-select"
                                         value={layout}
                                         onChange={(e) => {
-                                            setLayout(e.target.value as any)
+                                            if (!isWidgetLayout(e.target.value)) return;
+                                            setLayout(e.target.value)
                                             setCardFormComplete(false)
                                             setCardElementNonce((n) => n + 1)
                                         }}
                                         className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                     >
-                                        <option value="stack">Stack</option>
-                                        <option value="stack-compact">Stack Compact</option>
-                                        <option value="row">Row</option>
-                                        <option value="row-compact">Row Compact</option>
-                                        <option value="row-minimal">Row Minimal</option>
-                                        <option value="column">Column</option>
-                                        <option value="column-compact">Column Compact</option>
+                                        {widgetLayouts.map((widgetLayout) => (
+                                            <option key={widgetLayout} value={widgetLayout}>
+                                                {widgetLayout
+                                                    .split('-')
+                                                    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                                                    .join(' ')}
+                                            </option>
+                                        ))}
                                     </select>
                                     <ChevronDownIcon
                                         aria-hidden="true"
@@ -687,7 +743,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
 
                     </div>
-                    <OrderSummary formDisabled={formDisabled}/>
+                    <OrderSummary formDisabled={formDisabled} isSubmitting={isSubmitting}/>
                 </form>
             </div>
         </div>

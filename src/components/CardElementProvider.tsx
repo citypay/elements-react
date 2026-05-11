@@ -34,12 +34,16 @@ export function CardElementProvider({id, children}: PropsWithChildren<{id: strin
 
         h('el:creating');
         const elementsApi = elements.cardElement(stableOpts);
-        await elementsApi.init()
-        await elementsApi.awaitReady()
-        h("el:ready");
         const ref = {api: elementsApi, opts: stableOpts};
         elementInstances.set(id, ref)
         elementInstance.current = ref
+
+        await elementsApi.init()
+        h('el:mounting');
+        void elementsApi.awaitReady()
+            .then(() => h("el:ready"))
+            .catch(() => h("el:error"));
+
         return ref;
     };
 

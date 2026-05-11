@@ -217,7 +217,6 @@ export function CityPayProvider({
 
     return (
         <>
-            <code>${JSON.stringify(status)}</code>
             <CityPayContext.Provider value={value}>{children}</CityPayContext.Provider>
         </>
     );

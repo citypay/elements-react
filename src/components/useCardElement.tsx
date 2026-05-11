@@ -29,7 +29,8 @@ export function useCardElement(
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const formRef = useRef<any | null>(null);
+    const formRef = useRef<ElementsApi | null>(null);
+    const handlersRef = useRef<CpeFormHandlers | undefined>(handlers);
     const mountedRef = useRef<boolean>(false);
 
     // const [form, setForm] = useState<any>();
@@ -45,6 +46,10 @@ export function useCardElement(
     }), []);
 
     useEffect(() => {
+        handlersRef.current = handlers;
+    }, [handlers]);
+
+    useEffect(() => {
         if (providerStatus !== 'cpp:ready') {
             console.debug('not ready')
             return;
@@ -58,14 +63,19 @@ export function useCardElement(
 
             const node = containerRef.current;
             // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
-            const initOptions = node ? { ...options, element: node as any } : options;
+            const initOptions = node ? { ...options, element: node } : options;
 
             elementCtx.ensureElement(initOptions, setState)
                 .then(ref => {
+                    if (cancelled) {
+                        ref.api.destroy?.();
+                        return;
+                    }
+                    formRef.current = ref.api;
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {
-                    handlers?.onError?.(null, err);
+                    handlersRef.current?.onError?.(null, err);
                 });
         };
 
@@ -90,7 +100,7 @@ export function useCardElement(
             setState("el:idle");
             setError(null);
         };
-    }, [providerStatus, providerError, options, elementCtx, handlers]);
+    }, [providerStatus, providerError, options, elementCtx]);
 
 
     useEffect(() => {
@@ -109,9 +119,9 @@ export function useCardElement(
             throw new Error('No element provided');
         }
 
-        if (handlers?.onChange) {
-            api.onChange(handlers.onChange);
-        }
+        api.onChange((changeState: CpeChangeState) => {
+            handlersRef.current?.onChange?.({...changeState, elements: api});
+        });
 
     }, [elementsInstance])
 
