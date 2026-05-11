@@ -35,8 +35,8 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "@citypay/sdk": "2.0.5",
-    "next": "16.0.7",
+    "@citypay/sdk": "2.1.3",
+    "next": "16.2.3",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },

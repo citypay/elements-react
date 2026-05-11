@@ -21,13 +21,15 @@ export async function POST() {
     }
 
     const citypay = new CityPay(clientId, licenceKey, {
-        sandbox: true,
+        // sandbox: true,
     })
+
+
 
     try {
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            amount: 1001,
+            amount: 1,
             currency: "GBP",
             identifier: `cart-id-${crypto.randomUUID()}`,
             billTo: {

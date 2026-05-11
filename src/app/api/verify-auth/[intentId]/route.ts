@@ -16,7 +16,7 @@ export async function GET(_req: Request, { params }:{params: Promise<{ intentId:
     }
 
     const citypay = new CityPay(clientId, licenceKey, {
-        sandbox: true,
+       // sandbox: true,
     })
 
     const result = await citypay.paymentIntents.verifyAuthorised({

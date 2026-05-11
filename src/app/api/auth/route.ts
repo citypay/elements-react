@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const citypay = new CityPay(clientId, licenceKey, {
-        sandbox: true,
+       // sandbox: true,
     })
 
     const result = await citypay.paymentIntents.authorise({

@@ -162,11 +162,12 @@ export function CityPayProvider({
                      * src: 'https://dev.citypay.local:8080/loader/citypay.js',
                      *                         channel: 'local'
                      */
-                     const api = await CityPayPromise({
-                         debug: false,
+                    const api = await CityPayPromise({
+                        debug: true
                     });
 
                     if (cancelled) {
+                        console.log("Cancelled...")
                         return;
                     }
 
@@ -175,20 +176,24 @@ export function CityPayProvider({
                         createServerIntent,
                         eager: true,
                         middleware: middleware,
+                        sandbox: true,
+                        demo: true
                     });
                     setStatus('cpp:ready');
                 }
             } catch (e) {
                 if (cancelled) {
+                    console.log("Cancelled...")
                     return;
                 }
                 setError(e);
                 setStatus('cpp:error');
             }
         })()
-        return () => {
-            cancelled = true;
-        };
+        // return () => {
+        //     console.debug("Cancellation called")
+        //     cancelled = true;
+        // };
     }, [pubKey]);
 
     useEffect(() => {
