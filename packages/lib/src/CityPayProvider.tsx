@@ -71,7 +71,7 @@ export type ElementsInstance = {
 }
 
 function initPreconnect() {
-    const ORIGIN = 'https://ui.elements.citypay.com';
+    const ORIGIN = 'https://ui.elements.citypay.com'; // OK to hard-code this as it is only for prod optimisation
     const ensureLink = (rel: 'preconnect' | 'dns-prefetch', origin: string, extraAttrs?: Record<string, string>) => {
         const selector = `link[rel="${rel}"][href="${origin}"][data-citypay="true"]`;
         let link = document.head.querySelector<HTMLLinkElement>(selector);
