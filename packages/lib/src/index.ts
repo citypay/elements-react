@@ -5,7 +5,6 @@ export {CardFields, type CardFieldsProps} from './CardFields'
 export {type FieldsReferences} from './useCardFields'
 
 export {ApplepayElementProvider, useApplepayElementContext, type ApplepayElementContextShape} from "./ApplepayProvider"
-export {CardElementProvider, useCardElementContext, type CardElementContextShape} from './CardElementProvider'
 export {CardFieldsProvider, useCardFieldsContext, type CardFieldsContextShape} from './CardFieldsProvider'
 
 export * from './CityPayProvider'

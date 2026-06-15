@@ -1,42 +1,74 @@
 import {ElementsApi, ElementsApiListeners} from "@citypay/sdk";
+import {RefObject} from "react";
 
-export function addApiListeners(api: ElementsApi, listeners: ElementsApiListeners) {
+export type ListenerProps<T> = {
+    [K in keyof T as K extends `on${string}` ? K : never]: T[K];
+};
+
+export type NonListenerProps<T> = {
+    [K in keyof T as K extends `on${string}` ? never : K]: T[K];
+};
+
+/**
+ * Split a set of props into two groups: those that are listeners (with an 'on' prefix) and those that are not.
+ */
+export function splitElementProps<T extends Record<string, unknown>>(props: T) {
+    const listeners: Partial<ListenerProps<T>> = {};
+    const options: Partial<NonListenerProps<T>> = {};
+
+    for (const [key, value] of Object.entries(props) as Array<[keyof T, T[keyof T]]>) {
+        if (typeof key === 'string' && key.startsWith('on')) {
+            listeners[key as keyof ListenerProps<T>] = value as ListenerProps<T>[keyof ListenerProps<T>];
+        } else {
+            options[key as keyof NonListenerProps<T>] = value as NonListenerProps<T>[keyof NonListenerProps<T>];
+        }
+    }
+
+    return {
+        // @ts-ignore
+        listeners: listeners as ListenerProps<T>,
+        // @ts-ignore
+        nonListenerProps: options as NonListenerProps<T>,
+    };
+}
+
+export function addApiListeners(api: ElementsApi, listeners: RefObject<ElementsApiListeners>) {
 
     console.debug('[citypay] Adding API listeners')
 
-    if (listeners.onChange) {
-        api.onChange(listeners.onChange)
+    if (listeners.current.onChange) {
+        api.onChange(listeners.current.onChange)
     }
 
-    if (listeners.onAttention) {
-        api.onAttention(listeners.onAttention)
+    if (listeners.current.onAttention) {
+        api.onAttention(listeners.current.onAttention)
     }
 
-    if (listeners.onReady) {
-        api.onReady(listeners.onReady)
+    if (listeners.current.onReady) {
+        api.onReady(listeners.current.onReady)
     }
 
-    if (listeners.onProcessingStart) {
-        api.onProcessingStart(listeners.onProcessingStart)
+    if (listeners.current.onProcessingStart) {
+        api.onProcessingStart(listeners.current.onProcessingStart)
     }
 
-    if (listeners.onProcessingEnd) {
-        api.onProcessingEnd(listeners.onProcessingEnd)
+    if (listeners.current.onProcessingEnd) {
+        api.onProcessingEnd(listeners.current.onProcessingEnd)
     }
 
-    if (listeners.onAuthoriseStart) {
-        api.onAuthoriseStart(listeners.onAuthoriseStart)
+    if (listeners.current.onAuthoriseStart) {
+        api.onAuthoriseStart(listeners.current.onAuthoriseStart)
     }
 
-    if (listeners.onAuthoriseEnd) {
-        api.onAuthoriseEnd(listeners.onAuthoriseEnd)
+    if (listeners.current.onAuthoriseEnd) {
+        api.onAuthoriseEnd(listeners.current.onAuthoriseEnd)
     }
 
-    if (listeners.onError) {
-        api.onError(listeners.onError)
+    if (listeners.current.onError) {
+        api.onError(listeners.current.onError)
     }
 
-    if (listeners.onTokeniseEnd) {
-        api.onTokeniseEnd(listeners.onTokeniseEnd)
+    if (listeners.current.onTokeniseEnd) {
+        api.onTokeniseEnd(listeners.current.onTokeniseEnd)
     }
 }

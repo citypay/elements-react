@@ -16,9 +16,8 @@ import {
     FieldsReferences,
     FormLayoutName,
     PaymentIntentSession,
-    useCardElementContext,
-    useCardFieldsContext,
     useElements,
+    useElementInstances,
     VerifyAuthResponse
 } from "@citypay/elements-react"
 import {ServerConnection} from "@/server-conn/serverConnection";
@@ -397,9 +396,8 @@ function Delivery() {
 
 export function FormExample({paymentSession}: { paymentSession: PaymentIntentSession }) {
 
-    const cardElCtx = useCardElementContext();
-    const cardFieldsCtx = useCardFieldsContext();
     const elementsCtx: CityPayElements | null = useElements()
+    const elementsInstances = useElementInstances()
     const [cardFormComplete, setCardFormComplete] = useState(false);
     const [cardFieldsComplete, setCardFieldsComplete] = useState(false);
     const [formDisabled, setFormDisabled] = useState(true);
@@ -409,7 +407,8 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
     const [cardElementNonce, setCardElementNonce] = useState(0);
-    const cardElementId = `cardform-${layout}-${cardElementNonce}`;
+    const cardElementId = `cardform-${layout}`;
+    const cardFieldsId = `cardfields`;
     const fieldsRefs: FieldsReferences = {
         csc: useRef(null),
         expiry: useRef(null),
@@ -418,12 +417,13 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
     }
 
-    const getActiveApi = () =>
-        paymentMethod.id === "credit-card"
-            ? cardElCtx.getElement()?.api
+    const getActiveApi = () => {
+        return (paymentMethod.id === "credit-card"
+            ? elementsInstances?.get(cardElementId)?.api
             : paymentMethod.id === "credit-card-form"
-                ? cardFieldsCtx.getElement()?.api
-                : undefined;
+                ? elementsInstances?.get(cardFieldsId)?.api
+                : undefined)
+    }
 
     const selectPaymentMethod = (pm: typeof paymentMethods[number]) => {
         setPaymentMethod(pm);
@@ -435,6 +435,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     };
 
     useEffect(() => {
+        console.log(`Updating formDisables ${cardFormComplete} ${cardFieldsComplete}`);
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
     }, [cardFormComplete, cardFieldsComplete])
 
@@ -541,44 +542,44 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                           <>
                             <CardForm refs={fieldsRefs}/>
                             <CardFields
-                                refs={fieldsRefs}
-                                showCardIcon={true}
-                                onChange={(c: any) => {
+                              refs={fieldsRefs}
+                              showCardIcon={true}
+                              onChange={(c: any) => {
 
-                                function updateField(
-                                    key: keyof typeof c,
-                                    wrapId: string,
-                                    labelId: string,
-                                    baseLabel: string
-                                ) {
-                                    const wrap = document.getElementById(wrapId)
-                                    const label = document.getElementById(labelId)
-                                    const field = c[key] as { message?: string; valid: boolean; requested: boolean; }
-                                    const isInvalid = field && !field.valid
+                                  function updateField(
+                                      key: keyof typeof c,
+                                      wrapId: string,
+                                      labelId: string,
+                                      baseLabel: string
+                                  ) {
+                                      const wrap = document.getElementById(wrapId);
+                                      const label = document.getElementById(labelId);
+                                      const field = c[key] as { message?: string; valid: boolean; requested: boolean; };
+                                      const isInvalid = field && !field.valid;
 
-                                    if (wrap) {
-                                        wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb"
-                                    }
+                                      if (wrap) {
+                                          wrap.style.borderColor = isInvalid ? "red" : "#e5e7eb";
+                                      }
 
-                                    if (label) {
-                                        label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel
-                                        label.style.color = isInvalid ? "red" : "#64748b"
-                                    }
-                                }
+                                      if (label) {
+                                          label.innerText = field?.message ? `${baseLabel} (${field.message})` : baseLabel;
+                                          label.style.color = isInvalid ? "red" : "#64748b";
+                                      }
+                                  }
 
-                                updateField("csc", "csc-wrap", "csc-label", "CSC")
-                                updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)")
-                                updateField("name", "name-wrap", "name-label", "Name on card")
-                                updateField("pan", "pan-wrap", "pan-label", "Card number")
+                                  updateField("csc", "csc-wrap", "csc-label", "CSC");
+                                  updateField("expiry", "expiry-wrap", "expiry-label", "Expiry (MM/YY)");
+                                  updateField("name", "name-wrap", "name-label", "Name on card");
+                                  updateField("pan", "pan-wrap", "pan-label", "Card number");
 
 
-                                if (c.complete) {
-                                    console.log('CardFields complete')
-                                    setCardFieldsComplete(true)
-                                } else {
-                                    setCardFieldsComplete(false)
-                                }
-                            }}/>
+                                  if (c.complete) {
+                                      console.log('CardFields complete');
+                                      setCardFieldsComplete(true);
+                                  } else {
+                                      setCardFieldsComplete(false);
+                                  }
+                              }} cscElement={""} expiryElement={""} panElement={""} nameElement={""}/>
                         </>
                         }
                         {paymentMethod.id === 'credit-card' && (
@@ -614,6 +615,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                         )}
                         {/* layout: 'stack' | 'row-minimal' | 'row-compact' | 'row' | 'column-compact' | 'column'*/}
                             <CardElement
+                                identifier={cardElementId}
                                 visible={paymentMethod.id === 'credit-card'}
                                 key={cardElementId}
                                 language={'en'}
@@ -636,7 +638,8 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         setCardFormComplete(false)
                                     }
                                 }}
-                                onError={(err: unknown) => {console.error(`>>> onError handler: ${JSON.stringify(err)}`)}}
+                                onError={(err: unknown) => {console.error(`>>> onError handler: `, err)}}
+                                onTokeniseEnd={(p) => console.warn('>>> onTokeniseEnd: ', p)}
                             />
 
                         <ApplepayElement
@@ -705,11 +708,9 @@ export default function ExamplePage() {
                             verifyAuth: '/api/verify-auth'
                          }}>
             <ApplepayElementProvider identifier={'applepay'}>
-            <CardElementProvider identifier={'cardform'} >
             <CardFieldsProvider identifier={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
             </CardFieldsProvider>
-            </CardElementProvider>
             </ApplepayElementProvider>
         </CityPayProvider>
     </>

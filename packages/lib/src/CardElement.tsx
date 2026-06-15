@@ -1,49 +1,42 @@
 'use client';
 
-import React, {useMemo} from 'react';
-import {useCardElement} from './useCardElement';
-import {type CardElementOptions, ElementsApiListeners} from "@citypay/sdk";
+import {createElement, CreateElementComponentProps} from './createElement';
+import {type CardElementOptions, CityPayElements} from "@citypay/sdk";
 import {useElementsStatus} from "@/CityPayProvider";
-import {useCardElementContext} from "@/CardElementProvider";
+import React from "react";
 
-export type CardElementProps = {
-    visible?: boolean;
-} & Omit<CardElementOptions, 'element' | 'identifier'> & ElementsApiListeners
-
+export type CardElementProps = CreateElementComponentProps<CardElementOptions>
 
 export const CardElement: React.FC<CardElementProps> = (props: CardElementProps) => {
+    const {containerRef, idSafe} = createElement(props, {
+        defaultName: 'cardelement',
+        elementFactory: (opts: CardElementOptions, elements: CityPayElements) => elements.cardElement(opts),
+    });
+    const {status, error} = useElementsStatus();
 
-    const idCtx = useCardElementContext().identifier
+    const idDom = `cpe-${idSafe}`;
+    const visible = props.visible !== false && status === 'cpp:ready';
 
-    const idDom = `cpe-${idCtx}`
+    return (
+        <>
+            {status === 'cpp:initialising' && <>init...</>}
+            {status === 'cpp:idle' && <>idle...</>}
 
-    const fullOptions: CardElementOptions = useMemo(() => {
-        return {
-            ...props,
-            element: idDom,
-            identifier: idCtx
-        }
-    }, [idCtx, props])
+            {status === 'cpp:error' && (
+                <p className="text-sm">
+                    <span>Unable to render CityPay PaymentElement:</span>
+                    <span className="text-gray-700">{' ' + error}</span>
+                </p>
+            )}
 
-    const {containerRef} = useCardElement(fullOptions)
-    const {status, error}  = useElementsStatus()
-
-    if (status == 'cpp:initialising') {
-        return <>init...</>
-    }
-
-    if (status == 'cpp:idle') {
-        return <>idle...</>
-    }
-
-    if (status == 'cpp:error') {
-        return <>️<p className={"text-sm"}>
-
-            <span>Unable to render CityPay PaymentElement:</span>
-            <span className={"text-gray-700"}>{' ' + error}</span>
-
-        </p> </>
-    }
-
-    return <div style={{width: '100%', display: props.visible ? 'block' : 'none'}} id={idDom} ref={containerRef}></div>
-}
+            <div
+                id={idDom}
+                ref={containerRef}
+                style={{
+                    width: '100%',
+                    display: visible ? 'block' : 'none',
+                }}
+            />
+        </>
+    );
+};
