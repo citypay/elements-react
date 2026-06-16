@@ -26,12 +26,12 @@ export type CreateElementFunctionProps<TSdkOpts extends MonoFrameElementOptions>
  * @param functionProps     'Configuration' props that allow this function to create a particular element type
  * @returns                 DOM object for the element
  */
-export function createElementComponent<TSdkOpts extends MonoFrameElementOptions>(
+export function ElementComponent<TSdkOpts extends MonoFrameElementOptions>(
     componentProps: CreateElementComponentProps<TSdkOpts>,
     functionProps: CreateElementFunctionProps<TSdkOpts>
 ) {
 
-    const {containerRef, idSafe} = createSdkElement(componentProps, functionProps)
+    const {containerRef, idSafe} = useSdkElement(componentProps, functionProps)
 
     const {status, error}  = useElementsStatus()
 
@@ -68,7 +68,7 @@ export function createElementComponent<TSdkOpts extends MonoFrameElementOptions>
  * @param componentProps    Props passed by the developer from the component
  * @param functionProps     'Configuration' props that allow this function to create a particular element type
  */
-function createSdkElement<TSdkOpts extends MonoFrameElementOptions>(
+function useSdkElement<TSdkOpts extends MonoFrameElementOptions>(
     componentProps: CreateElementComponentProps<TSdkOpts>,
     functionProps: CreateElementFunctionProps<TSdkOpts>,
 ) {
@@ -125,11 +125,11 @@ function createSdkElement<TSdkOpts extends MonoFrameElementOptions>(
             const {nonListenerProps} = splitElementProps(latestPropsRef.current);
             const {visible, ...sdkOptions} = nonListenerProps;
 
-            const finalOpts: TSdkOpts = {
+            const finalOpts = {
                 ...sdkOptions,
                 identifier: idSafe.current,
                 element: containerRef.current
-            }
+            } as unknown as TSdkOpts;
 
             const elementsApi = functionProps.elementFactory(finalOpts, elements);
 
@@ -158,7 +158,16 @@ function createSdkElement<TSdkOpts extends MonoFrameElementOptions>(
             if (initStartedRef.current) return;
             initStartedRef.current = true;
 
-            void init().catch(err => {setError(err); latestPropsRef.current.onError?.(err)});
+            void init().catch(err => {
+                initStartedRef.current = false;
+                const normalized = err instanceof Error ? err : String(err);
+                setError(normalized);
+                setState('el:error');
+                elementsInstances.delete(idSafe.current);
+                elementsInstance.current?.api.destroy?.();
+                elementsInstance.current = undefined;
+                latestPropsRef.current.onError?.(err);
+            });
         }
 
         return () => {

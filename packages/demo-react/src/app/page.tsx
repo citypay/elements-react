@@ -707,11 +707,9 @@ export default function ExamplePage() {
                          middleware={{
                             verifyAuth: '/api/verify-auth'
                          }}>
-            <ApplepayElementProvider identifier={'applepay'}>
             <CardFieldsProvider identifier={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
             </CardFieldsProvider>
-            </ApplepayElementProvider>
         </CityPayProvider>
     </>
 

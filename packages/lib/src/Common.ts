@@ -71,4 +71,8 @@ export function addApiListeners(api: ElementsApi, listeners: RefObject<ElementsA
     if (listeners.current.onTokeniseEnd) {
         api.onTokeniseEnd(listeners.current.onTokeniseEnd)
     }
+
+    if (listeners.current.onCancel) {
+        api.onCancel(listeners.current.onCancel)
+    }
 }
