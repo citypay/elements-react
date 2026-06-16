@@ -1,12 +1,18 @@
 'use client';
 
-import {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementInstances, useElements, useElementsStatus} from './CityPayProvider';
 import type {ElementsInstance} from './CityPayProvider';
-import {CityPayElements, MonoFrameElementOptions, ElementsApiListeners, ElementsApi} from "@citypay/sdk";
+import {
+    CityPayElements,
+    MonoFrameElementOptions,
+    ElementsApiListeners,
+    ElementsApi,
+} from "@citypay/sdk";
 import {addApiListeners, splitElementProps} from "@/Common";
 
-export type CreateElementComponentProps<TSdkOpts extends MonoFrameElementOptions> = { visible?: boolean; } & Omit<TSdkOpts, 'element'> & ElementsApiListeners;
+export type CreateElementComponentProps<TSdkOpts extends MonoFrameElementOptions> =
+    { visible?: boolean; } & Omit<TSdkOpts, 'element'> & ElementsApiListeners;
 
 export type CreateElementFunctionProps<TSdkOpts extends MonoFrameElementOptions> = {
     defaultName: string,
@@ -14,10 +20,55 @@ export type CreateElementFunctionProps<TSdkOpts extends MonoFrameElementOptions>
 }
 
 /**
+ * Create an element, including the element API instance from the SDK and DOM object
+ *
+ * @param componentProps    Props passed by the developer from the component
+ * @param functionProps     'Configuration' props that allow this function to create a particular element type
+ * @returns                 DOM object for the element
+ */
+export function createElementComponent<TSdkOpts extends MonoFrameElementOptions>(
+    componentProps: CreateElementComponentProps<TSdkOpts>,
+    functionProps: CreateElementFunctionProps<TSdkOpts>
+) {
+
+    const {containerRef, idSafe} = createSdkElement(componentProps, functionProps)
+
+    const {status, error}  = useElementsStatus()
+
+    const idDom = `cpe-${idSafe}`;
+    const visible = componentProps.visible !== false && status === 'cpp:ready';
+
+    return (
+        <>
+            {status === 'cpp:initialising' && <>init...</>}
+            {status === 'cpp:idle' && <>idle...</>}
+
+            {status === 'cpp:error' && (
+                <p className="text-sm">
+                    <span>Unable to render CityPay PaymentElement:</span>
+                    <span className="text-gray-700">{' ' + error}</span>
+                </p>
+            )}
+
+            <div
+                id={idDom}
+                ref={containerRef}
+                style={{
+                    width: '100%',
+                    display: visible ? 'block' : 'none',
+                }}
+            />
+        </>
+    );
+}
+
+/**
+ * Create an element API instance from the SDK
+ *
  * @param componentProps    Props passed by the developer from the component
  * @param functionProps     'Configuration' props that allow this function to create a particular element type
  */
-export function createElement<TSdkOpts extends MonoFrameElementOptions>(
+function createSdkElement<TSdkOpts extends MonoFrameElementOptions>(
     componentProps: CreateElementComponentProps<TSdkOpts>,
     functionProps: CreateElementFunctionProps<TSdkOpts>,
 ) {
