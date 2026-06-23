@@ -12,7 +12,7 @@ export type NonListenerProps<T> = {
 /**
  * Split a set of props into two groups: those that are listeners (with an 'on' prefix) and those that are not.
  */
-export function splitElementProps<T extends Record<string, unknown>>(props: T) {
+export function splitElementProps<T extends object>(props: T) {
     const listeners: Partial<ListenerProps<T>> = {};
     const options: Partial<NonListenerProps<T>> = {};
 
