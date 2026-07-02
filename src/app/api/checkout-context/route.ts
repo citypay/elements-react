@@ -1,17 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {CityPay} from "@citypay/sdk";
-
-type CheckoutContextRequest = {
-    merchantId: number;
-    origin: string;
-    currency: "GBP";
-    country: "GB";
-    requestedCapabilities: Array<"card" | "apple_pay" | "google_pay">;
-};
-
-type CityPayWithCheckoutContext = CityPay & {
-    createCheckoutContext: (request: CheckoutContextRequest) => Promise<unknown>;
-};
+import {initCitypay} from "@/app/api/citypay";
 
 function getRequestOrigin(request: NextRequest) {
     const origin = request.headers.get("origin");
@@ -25,24 +13,19 @@ function getRequestOrigin(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-    const clientId = process.env.CITYPAY_CLIENT_ID;
-    const licenceKey = process.env.CITYPAY_LICENCE_KEY;
-    const merchantId = process.env.CITYPAY_MERCHANT_ID;
 
-    if (!clientId || !licenceKey || !merchantId) {
-        return NextResponse.json({error: "Missing required CityPay environment variables"}, {status: 500});
-    }
-
-    const citypay = new CityPay(clientId, licenceKey, {sandbox: true}) as CityPayWithCheckoutContext;
+    const citypay = await initCitypay();
+    const mid = process.env.CITYPAY_MERCHANT_ID;
 
     try {
-        const checkoutContext = await citypay.createCheckoutContext({
-            merchantId: Number(merchantId),
+
+        const checkoutContext =  citypay.checkoutContexts.create({
+            merchantId: Number(mid),
             origin: getRequestOrigin(request),
             currency: "GBP",
             country: "GB",
             requestedCapabilities: ["card", "apple_pay", "google_pay"],
-        });
+        })
 
         return NextResponse.json(checkoutContext, {status: 200});
     } catch (e) {
