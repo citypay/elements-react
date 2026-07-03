@@ -31,9 +31,6 @@ export function splitElementProps<T extends Record<string, unknown>>(props: T) {
 }
 
 export function addApiListeners(api: ElementsApi, listeners: RefObject<ElementsApiListeners>) {
-
-    console.debug('[citypay] Adding API listeners')
-
     if (listeners.current.onChange) {
         api.onChange(listeners.current.onChange)
     }
