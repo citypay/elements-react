@@ -36,6 +36,7 @@ const CityPayContext = createContext<CityPayContextShape | null>(null);
 export type CityPayProviderProps = PropsWithChildren<{
     pubKey?: string;
     createServerIntent?: () => Promise<PaymentIntentSession>;
+    debug?: boolean;
     middleware?: {
         /**
          * Middleware route for attaching a payment method or token.
@@ -101,31 +102,17 @@ function initPreconnect() {
 export function CityPayProvider({
                                     pubKey,
                                     createServerIntent,
+                                    debug = false,
                                     middleware,
                                     children,
                                 }: CityPayProviderProps) {
 
-    const hashId = useRef('provider-' + Math.random().toString(32).substring(2, 16))
-    const providerId = useRef(`citypay-react-elements-${hashId.current}`);
-    const renderCountRef = useRef(0);
     const elementRefs = useRef<Map<string, ElementsInstance>>(new Map());
 
     const [status, setStatus] = useState<ProviderStatus>('cpp:idle');
     const [error, setError] = useState<unknown>();
     const elementsRef = useRef<CityPayElements | null>(null);
     const lastPubKeyRef = useRef<string | null>(null);
-
-    // used to track when initialised
-    const staticStateRef = useRef<{ bootTime: number; note?: string } | null>(null);
-    if (!staticStateRef.current) {
-        staticStateRef.current = {bootTime: Date.now(), note: 'created once'};
-        console.debug('CityPayProvider staticState initialised:', staticStateRef.current, providerId);
-    }
-
-    renderCountRef.current += 1;
-    // Useful log to see when/why re-renders happen
-    console.debug(' > CityPayProvider re-render count:', hashId.current, renderCountRef.current);
-
 
     // Inject preconnect/dns-prefetch without Next.js
     useEffect(initPreconnect, []);
@@ -153,17 +140,10 @@ export function CityPayProvider({
                 if (needsNew) {
                     lastPubKeyRef.current = pubKey;
 
-                    console.debug('Initialising elementsConfig', hashId.current, renderCountRef.current);
                     setStatus('cpp:initialising');
 
-                    /**
-                     * src: 'https://dev.citypay.local:8080/loader/citypay.js',
-                     *                         channel: 'local'
-                     */
                      const api = await CityPayPromise({
-                         debug: false,
-                        // src: 'https://dev.citypay.local:8080/loader/citypay.js',
-                        // channel: 'local'
+                         debug,
                     });
 
                     if (cancelled) {
@@ -189,11 +169,7 @@ export function CityPayProvider({
         return () => {
             cancelled = true;
         };
-    }, [pubKey]);
-
-    useEffect(() => {
-        console.log('elements change', hashId.current, renderCountRef.current);
-    }, [elementRefs]);
+    }, [pubKey, debug]);
 
     const getElementRef = (id: string) => elementRefs.current.get(id);
 
@@ -217,7 +193,6 @@ export function CityPayProvider({
 export function useElements(): CityPayElements | null {
     const ctx = useContext(CityPayContext);
     if (!ctx) throw new Error('useElements must be used within a <CityPayProvider>');
-    console.log('useElements', ctx.status)
     return ctx.elements;
 }
 
