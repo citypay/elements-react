@@ -31,11 +31,8 @@ export function CardFieldsProvider({identifier, children}: PropsWithChildren<{id
 
         h('el:creating');
         const elementsApi = elements.cardFieldsElement(opts)
-        console.log('>> init()')
         await elementsApi.init()
-        console.log('>> await()')
         await elementsApi.awaitReady()
-        console.log('>> done')
         h("el:ready");
         const ref = {api: elementsApi, opts: opts};
         elementInstances.set(identifierSafe, ref)
