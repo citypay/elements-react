@@ -85,18 +85,15 @@ importers:
   packages/lib:
     dependencies:
       '@citypay/sdk':
-        specifier: 2.1.7
+        specifier: ^2.1.7
         version: 2.1.7
       react:
-        specifier: ^19
+        specifier: '>=18 <20'
         version: 19.2.1
       react-dom:
-        specifier: ^19
+        specifier: '>=18 <20'
         version: 19.2.1(react@19.2.1)
     devDependencies:
-      '@eslint/eslintrc':
-        specifier: ^3
-        version: 3.3.5
       '@types/node':
         specifier: ^20
         version: 20.19.40

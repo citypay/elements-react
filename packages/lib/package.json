@@ -1,7 +1,28 @@
 {
   "name": "@citypay/elements-react",
   "version": "0.1.0",
+  "description": "React components and hooks for CityPay Elements.",
   "private": false,
+  "license": "MIT",
+  "author": "CityPay Limited",
+  "homepage": "https://github.com/citypay/elements-react#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/citypay/elements-react.git",
+    "directory": "packages/lib"
+  },
+  "bugs": {
+    "url": "https://github.com/citypay/elements-react/issues"
+  },
+  "keywords": [
+    "citypay",
+    "payments",
+    "payment-elements",
+    "react",
+    "checkout",
+    "card-payments",
+    "apple-pay"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -10,11 +31,13 @@
     "clean": "rimraf dist dist-types",
     "build": "tsup",
     "prepack": "pnpm build",
+    "pack:dry-run": "pnpm pack --dry-run",
     "lint": "eslint"
   },
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "main": "./dist/index.js",
@@ -29,15 +52,17 @@
     }
   },
   "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "peerDependencies": {
-    "react": "^19",
-    "react-dom": "^19"
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
   },
   "dependencies": {
-    "@citypay/sdk": "2.1.7"
+    "@citypay/sdk": "^2.1.7"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
