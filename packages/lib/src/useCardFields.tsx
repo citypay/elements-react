@@ -51,14 +51,15 @@ export function useCardFields(props: CardFieldsProps) {
                 });
         };
 
-        // if (!(Object.values(props.refs).every((r: RefObject<HTMLElement | null>) => r.current !== null))){
-        //     // Defer until after the ref attaches (commit phase)
-        //     timeoutId = setTimeout(init, 0);
-        // } else {
-        //     init();
-        // }
+        const fieldRefs = Object.values(props.refs) as Array<RefObject<HTMLElement | null>>;
 
-        // void createAndMount();
+        if (!(fieldRefs.every((r) => r.current !== null))){
+            // Defer until after the ref attaches.
+            timeoutId = setTimeout(init, 0);
+        } else {
+            init();
+        }
+
         return () => {
             cancelled = true;
             if (timeoutId) clearTimeout(timeoutId);

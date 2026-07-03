@@ -1,10 +1,11 @@
 # CityPay Elements React (@citypay/elements-react) and Associated Demo
 
 A lightweight React wrapper and example app for CityPay Elements. It shows how to securely capture and process card 
-payments in a React/Next.js application using CityPay's Payment Intent APIs. It covers tokenisation, attach, 
+payments in a React application using CityPay's Payment Intent APIs. It covers tokenisation, attach, 
 confirmation, and optional authorisation (including 3‑D Secure when required).
 
-This repository contains the source for the @citypay/elements-react React components, and an example Next.js app.
+This repository contains the source for the @citypay/elements-react React components, a Vite React demo app, and a
+separate Express demo server for secure payment operations.
 
 ## Demo QuickStart
 
@@ -34,14 +35,14 @@ corepack prepare pnpm@11.9.0 --activate
 
 ## What is inside
 
-- Next.js example application showing a simple checkout page and the available payment options.
+- Vite React example application showing a simple checkout page and the available payment options.
 - Node Express HTTPS server to support the secure server-side functionality required by the example application.
 - Environment-based configuration for your CityPay account.
 - Source code for the referenced @citypay/elements-react components.
 
 ## Prerequisites
 
-- React 18+ (this repo uses React 19) with Next.js 15/16 App Router
+- React 18+ (this repo uses React 19)
 - Node 22.13+ for pnpm 11
 - pnpm v11+ (this repo is configured and tested as a pnpm workspace)
 - A CityPay account with API credentials
@@ -159,7 +160,7 @@ EX_CP_MID=xxxxxxx
 
 **packages/demo-react/.env.local**
 ```
-NEXT_PUBLIC_EX_CP_PUBLIC_KEY=pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+VITE_EX_CP_PUBLIC_KEY=pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 #### Environment variables not being picked up
@@ -300,15 +301,14 @@ Fix:
 - Ensure Node.js is allowed
 - Consider disabling behaviour/ransomware shields for development
 
-### Build / Framework Issues
+### Build / Frontend Issues
 
-#### Next.js errors or hydration issues
+#### Vite build or dev server errors
 
 - Ensure Node version is compatible (Node 22.13+ is recommended for pnpm 11)
-- Delete `.next` and rebuild:
+- Rebuild the local library and demo:
   ```bash
-  rm -rf .next
-  pnpm demo:dev
+  pnpm demo:build
   ```
 
 #### Changes not reflecting in browser

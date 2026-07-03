@@ -1,4 +1,4 @@
-import {FieldsReferences} from "@/components/useCardFields";
+import type {FieldsReferences} from "@citypay/elements-react";
 
 export function CardForm({refs}: { refs: FieldsReferences }) {
     const styles = {

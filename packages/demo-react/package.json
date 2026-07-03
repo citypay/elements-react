@@ -4,28 +4,28 @@
   "private": false,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "dev": "next dev --experimental-https --experimental-https-key ./certs/localhost-key.pem --experimental-https-cert ./certs/localhost.pem",
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host localhost --port 3000",
     "certs:win": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-local-certs.ps1",
     "certs:bash": "bash ./scripts/generate-local-certs.sh",
-    "start": "next start --experimental-https --experimental-https-key ./certs/localhost-key.pem --experimental-https-cert ./certs/localhost.pem",
     "lint": "eslint"
   },
   "dependencies": {
     "@citypay/elements-react": "workspace:*",
-    "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@vitejs/plugin-react": "^5.1.2",
     "@heroicons/react": "2.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^7.2.7"
   }
 }

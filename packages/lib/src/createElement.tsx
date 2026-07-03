@@ -123,7 +123,8 @@ function useSdkElement<TSdkOpts extends MonoFrameElementOptions>(
             setError(null);
 
             const {nonListenerProps} = splitElementProps(latestPropsRef.current);
-            const {visible, ...sdkOptions} = nonListenerProps;
+            const sdkOptions = {...nonListenerProps};
+            delete (sdkOptions as { visible?: unknown }).visible;
 
             const finalOpts = {
                 ...sdkOptions,

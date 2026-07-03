@@ -25,9 +25,7 @@ export function splitElementProps<T extends Record<string, unknown>>(props: T) {
     }
 
     return {
-        // @ts-ignore
         listeners: listeners as ListenerProps<T>,
-        // @ts-ignore
         nonListenerProps: options as NonListenerProps<T>,
     };
 }

@@ -15,13 +15,14 @@
 # testing
 /coverage
 
-# next.js
+# framework build artifacts
 /.next/
 /packages/demo-react/.next/
 /out/
 
 # production
 /build
+/packages/demo-react/dist/
 /packages/lib/dist/
 
 # misc

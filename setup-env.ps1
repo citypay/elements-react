@@ -148,12 +148,15 @@ EX_CP_MID=$(Escape-EnvValue $mid)
 
 # Write react env
 if (Confirm-UpdateFile $ReactEnvFile) {
-    $currentPublicKey = Read-EnvValue $ReactEnvFile "NEXT_PUBLIC_EX_CP_PUBLIC_KEY"
+    $currentPublicKey = Read-EnvValue $ReactEnvFile "VITE_EX_CP_PUBLIC_KEY"
+    if ([string]::IsNullOrEmpty($currentPublicKey)) {
+        $currentPublicKey = Read-EnvValue $ReactEnvFile "NEXT_PUBLIC_EX_CP_PUBLIC_KEY"
+    }
 
-    $publicKey = Prompt-Required "NEXT_PUBLIC_EX_CP_PUBLIC_KEY" "Public key (e.g. pk_xxx)" $false $currentPublicKey
+    $publicKey = Prompt-Required "VITE_EX_CP_PUBLIC_KEY" "Public key (e.g. pk_xxx)" $false $currentPublicKey
 
 @"
-NEXT_PUBLIC_EX_CP_PUBLIC_KEY=$(Escape-EnvValue $publicKey)
+VITE_EX_CP_PUBLIC_KEY=$(Escape-EnvValue $publicKey)
 "@ | Set-Content -Path $ReactEnvFile -Encoding UTF8
 
     Write-Host "Wrote $ReactEnvFile"

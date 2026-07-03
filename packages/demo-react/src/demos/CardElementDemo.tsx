@@ -1,10 +1,14 @@
-"use client"
-
-import {CityPayProvider, PaymentIntentSession, CardElement, VerifyAuthResponse, useElementInstances} from "@citypay/elements-react";
-import {useEffect, useState} from "react";
+import {
+    CardElement,
+    CityPayProvider,
+    PaymentIntentSession,
+    useElementInstances,
+    VerifyAuthResponse
+} from "@citypay/elements-react";
+import {SyntheticEvent, useEffect, useState} from "react";
 import {ServerConnection} from "@/server-conn/serverConnection";
 
-export default function Page() {
+export default function CardElementDemo() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
 
@@ -25,7 +29,7 @@ export default function Page() {
 
     return <>
 
-        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_EX_CP_PUBLIC_KEY}
+        <CityPayProvider pubKey={import.meta.env.VITE_EX_CP_PUBLIC_KEY}
                          createServerIntent={async () => {
                              return paymentSession;
                          }}>
@@ -40,7 +44,7 @@ function CardElementWithSubmit({paymentSession}: { paymentSession: PaymentIntent
 
     const elementsInstances = useElementInstances()
 
-    const submitHandler = async (e: React.FormEvent<HTMLButtonElement>) => {
+    const submitHandler = async (e: SyntheticEvent<HTMLButtonElement>) => {
         e.preventDefault();
 
         const api = elementsInstances?.get('card-element')?.api

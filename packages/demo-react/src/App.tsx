@@ -1,8 +1,7 @@
-'use client'
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
-import {useEffect, useRef, useState} from "react";
-import {CardForm} from "@/app/FieldsCardForm";
+import {useEffect, useRef, useState, type FormEvent} from "react";
+import {CardForm} from "@/components/FieldsCardForm";
 
 import {
     ApplepayElement,
@@ -18,9 +17,8 @@ import {
     useElementInstances,
     VerifyAuthResponse
 } from "@citypay/elements-react"
+import {VERIFY_AUTH_PATH} from "@/server-conn/config";
 import {ServerConnection} from "@/server-conn/serverConnection";
-
-const SERVER_DOMAIN = process.env.EX_CP_SERVER_DOMAIN || "http://localhost:3005"
 
 const products = [
     {
@@ -404,7 +402,6 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [paymentError, setPaymentError] = useState<string | undefined>();
     const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
-    const [cardElementNonce, setCardElementNonce] = useState(0);
     const cardElementId = `cardform-${layout}`;
     const cardFieldsId = `cardfields`;
     const fieldsRefs: FieldsReferences = {
@@ -428,7 +425,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
         setCardFormComplete(false);
 
         if (pm.id === 'credit-card') {
-            setCardElementNonce((n) => n + 1);
+            setCardFormComplete(false);
         }
     };
 
@@ -437,7 +434,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
     }, [cardFormComplete, cardFieldsComplete])
 
-    const submitHandler = async (e: React.FormEvent<HTMLFormElement>) => {
+    const submitHandler = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const api = getActiveApi();
@@ -507,6 +504,8 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                 <form className="lg:grid lg:grid-cols-2 lg:gap-x-12 xl:gap-x-16" onSubmit={submitHandler}>
                     <div>
 
+                        <ContactInfo/>
+                        <ShippingInfo/>
                         <Delivery/>
 
                         {/* Payment */}
@@ -592,7 +591,6 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                         onChange={(e) => {
                                             setLayout(e.target.value as any)
                                             setCardFormComplete(false)
-                                            setCardElementNonce((n) => n + 1)
                                         }}
                                         className="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                                     >
@@ -627,7 +625,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                     '--cpe-radius': '6px',              // widget border radius
                                 }}
                                 cardSchemesDisplay={'dynamic-inline'}
-                                onChange={async (cs) => {
+                                onChange={async (cs: { complete?: boolean }) => {
                                     console.log('>>>onChange', cs)
                                     if (cs.complete) {
                                         console.log('>>>complete')
@@ -637,7 +635,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                     }
                                 }}
                                 onError={(err: unknown) => {console.error(`>>> onError handler: `, err)}}
-                                onTokeniseEnd={(p) => console.warn('>>> onTokeniseEnd: ', p)}
+                                onTokeniseEnd={(p: unknown) => console.warn('>>> onTokeniseEnd: ', p)}
                             />
 
                         <ApplepayElement
@@ -670,14 +668,14 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
 
                     </div>
-                    <OrderSummary formDisabled={formDisabled}/>
+                    <OrderSummary formDisabled={formDisabled || isSubmitting}/>
                 </form>
             </div>
         </div>
     )
 }
 
-export default function ExamplePage() {
+export default function App() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
 
@@ -698,12 +696,12 @@ export default function ExamplePage() {
 
     return <>
 
-        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_EX_CP_PUBLIC_KEY}
+        <CityPayProvider pubKey={import.meta.env.VITE_EX_CP_PUBLIC_KEY}
                          createServerIntent={async () => {
                              return paymentSession;
                          }}
                          middleware={{
-                            verifyAuth: '/api/verify-auth'
+                            verifyAuth: VERIFY_AUTH_PATH
                          }}>
             <CardFieldsProvider identifier={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />

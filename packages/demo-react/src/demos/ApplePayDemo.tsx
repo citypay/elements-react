@@ -1,10 +1,8 @@
-"use client"
-
 import {CityPayProvider, PaymentIntentSession, ApplepayElement} from "@citypay/elements-react";
 import {useEffect, useState} from "react";
 import {ServerConnection} from "@/server-conn/serverConnection";
 
-export default function Page() {
+export default function ApplePayDemo() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
 
@@ -25,7 +23,7 @@ export default function Page() {
 
     return <>
 
-        <CityPayProvider pubKey={process.env.NEXT_PUBLIC_EX_CP_PUBLIC_KEY}
+        <CityPayProvider pubKey={import.meta.env.VITE_EX_CP_PUBLIC_KEY}
                          createServerIntent={async () => {
                              return paymentSession;
                          }}>
@@ -42,7 +40,7 @@ export default function Page() {
                 }}
                 onAuthoriseEnd={async () => { console.log("[cp-demo] ApplePay payment session complete. Payment must be authorised on your secure server") }}
                 onCancel={async () => { console.log("[cp-demo] ApplePay payment session cancelled by user") }}
-                onError={async (error) => { console.log("[cp-demo] ApplePay payment session error: " + error) }}
+                onError={async (error: unknown) => { console.log("[cp-demo] ApplePay payment session error: " + error) }}
             />
 
         </CityPayProvider>
