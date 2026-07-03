@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/**/node_modules
+.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -15,14 +17,20 @@
 
 # next.js
 /.next/
+/packages/demo-react/.next/
 /out/
 
 # production
 /build
+/packages/lib/dist/
 
 # misc
 .DS_Store
 *.pem
+
+# generated local HTTPS certificates
+/packages/demo-react/certs/
+/packages/demo-server/certs/
 
 # debug
 npm-debug.log*

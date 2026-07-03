@@ -8,33 +8,46 @@ function Prompt-Required {
     param (
         [string]$Name,
         [string]$Prompt,
-        [bool]$Secret = $false
+        [bool]$Secret = $false,
+        [string]$Current = ""
     )
 
     while ($true) {
+        $promptText = $Prompt
+        if (![string]::IsNullOrEmpty($Current)) {
+            if ($Secret) {
+                $currentText = Mask-Value $Current
+            } else {
+                $currentText = $Current
+            }
+            $promptText = "$Prompt [current: $currentText, press Enter to keep]"
+        }
+
         if ($Secret) {
-            $secure = Read-Host "$Prompt" -AsSecureString
-            $value = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-                [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-            )
+            $secure = Read-Host "$promptText" -AsSecureString
+            $value = Convert-SecureStringToPlainText $secure
         } else {
-            $value = Read-Host "$Prompt"
+            $value = Read-Host "$promptText"
         }
 
         if (![string]::IsNullOrWhiteSpace($value)) {
             return $value
         }
 
+        if (![string]::IsNullOrEmpty($Current)) {
+            return $Current
+        }
+
         Write-Host "$Name cannot be empty." -ForegroundColor Yellow
     }
 }
 
-function Confirm-Overwrite {
+function Confirm-UpdateFile {
     param ([string]$FilePath)
 
     if (Test-Path $FilePath) {
-        $response = Read-Host "$FilePath already exists. Overwrite? [y/N]"
-        if ($response -notmatch '^(y|Y|yes|YES)$') {
+        $response = Read-Host "$FilePath already exists. Update values? [Y/n]"
+        if ($response -match '^(n|N|no|NO)$') {
             Write-Host "Skipped $FilePath"
             return $false
         }
@@ -43,12 +56,62 @@ function Confirm-Overwrite {
     return $true
 }
 
+function Convert-SecureStringToPlainText {
+    param ([securestring]$Value)
+
+    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($Value)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+    }
+}
+
 function Escape-EnvValue {
     param ([string]$Value)
 
     $escaped = $Value -replace '\\', '\\\\'
     $escaped = $escaped -replace '"', '\"'
     return '"' + $escaped + '"'
+}
+
+function Read-EnvValue {
+    param (
+        [string]$FilePath,
+        [string]$Name
+    )
+
+    if (!(Test-Path $FilePath)) {
+        return ""
+    }
+
+    $line = Get-Content $FilePath | Where-Object { $_ -match "^$([regex]::Escape($Name))=" } | Select-Object -Last 1
+    if ([string]::IsNullOrEmpty($line)) {
+        return ""
+    }
+
+    $value = $line.Substring($Name.Length + 1)
+    if ($value.StartsWith('"') -and $value.EndsWith('"')) {
+        $value = $value.Substring(1, $value.Length - 2)
+        $value = $value -replace '\\"', '"'
+        $value = $value -replace '\\\\', '\'
+    }
+
+    return $value
+}
+
+function Mask-Value {
+    param ([string]$Value)
+
+    if ([string]::IsNullOrEmpty($Value)) {
+        return "<not set>"
+    }
+
+    if ($Value.Length -le 4) {
+        return "****"
+    }
+
+    return $Value.Substring(0, 2) + "****" + $Value.Substring($Value.Length - 2)
 }
 
 # Validate structure
@@ -60,18 +123,20 @@ if (!(Test-Path "packages/demo-server") -or !(Test-Path "packages/demo-react")) 
 Write-Host "CityPay demo environment setup"
 Write-Host ""
 
-# Prompt user
-$clientId = Prompt-Required "EX_CP_CLIENT_ID" "Client ID (e.g. PCxxxxxx)"
-$licenseKey = Prompt-Required "EX_CP_LICENSE_KEY" "License key" $true
-$mid = Prompt-Required "EX_CP_MID" "Merchant ID"
-$publicKey = Prompt-Required "NEXT_PUBLIC_EX_CP_PUBLIC_KEY" "Public key (e.g. pk_xxx)"
-
 # Ensure directories exist
 New-Item -ItemType Directory -Force -Path (Split-Path $ServerEnvFile) | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path $ReactEnvFile) | Out-Null
 
 # Write server env
-if (Confirm-Overwrite $ServerEnvFile) {
+if (Confirm-UpdateFile $ServerEnvFile) {
+    $currentClientId = Read-EnvValue $ServerEnvFile "EX_CP_CLIENT_ID"
+    $currentLicenseKey = Read-EnvValue $ServerEnvFile "EX_CP_LICENSE_KEY"
+    $currentMid = Read-EnvValue $ServerEnvFile "EX_CP_MID"
+
+    $clientId = Prompt-Required "EX_CP_CLIENT_ID" "Client ID (e.g. PCxxxxxx)" $false $currentClientId
+    $licenseKey = Prompt-Required "EX_CP_LICENSE_KEY" "Licence key" $true $currentLicenseKey
+    $mid = Prompt-Required "EX_CP_MID" "Merchant ID" $false $currentMid
+
 @"
 EX_CP_CLIENT_ID=$(Escape-EnvValue $clientId)
 EX_CP_LICENSE_KEY=$(Escape-EnvValue $licenseKey)
@@ -82,7 +147,11 @@ EX_CP_MID=$(Escape-EnvValue $mid)
 }
 
 # Write react env
-if (Confirm-Overwrite $ReactEnvFile) {
+if (Confirm-UpdateFile $ReactEnvFile) {
+    $currentPublicKey = Read-EnvValue $ReactEnvFile "NEXT_PUBLIC_EX_CP_PUBLIC_KEY"
+
+    $publicKey = Prompt-Required "NEXT_PUBLIC_EX_CP_PUBLIC_KEY" "Public key (e.g. pk_xxx)" $false $currentPublicKey
+
 @"
 NEXT_PUBLIC_EX_CP_PUBLIC_KEY=$(Escape-EnvValue $publicKey)
 "@ | Set-Content -Path $ReactEnvFile -Encoding UTF8

@@ -6,9 +6,7 @@ import {CardForm} from "@/app/FieldsCardForm";
 
 import {
     ApplepayElement,
-    ApplepayElementProvider,
     CardElement,
-    CardElementProvider,
     CardFields,
     CardFieldsProvider,
     CityPayElements,

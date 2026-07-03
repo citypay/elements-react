@@ -1,11 +1,17 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
+  - esbuild
+  - sharp
+  - unrs-resolver
 
 packages:
   - "./packages/demo-react"
   - "./packages/demo-server"
   - "./packages/lib"
+  - "."
