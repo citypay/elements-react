@@ -1,5 +1,5 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
-import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid'
+import {CheckCircleIcon, ExclamationCircleIcon, TrashIcon, XMarkIcon} from '@heroicons/react/20/solid'
 import {useEffect, useRef, useState, type FormEvent} from "react";
 import {CardForm} from "@/components/FieldsCardForm";
 
@@ -47,11 +47,71 @@ const deliveryMethods = [
     {id: 2, title: 'Express', turnaround: '2–5 business days', price: '£16.00'},
 ]
 const paymentMethods = [
-    {id: 'credit-card', title: 'CCWidget'},
-    {id: 'credit-card-form', title: 'CCForm'},
-    {id: 'apple', title: 'ApplePay'},
-    {id: 'google', title: 'GooglePay'},
+    {id: 'credit-card', title: 'Card widget'},
+    {id: 'credit-card-form', title: 'Card fields'},
+    {id: 'apple', title: 'Apple Pay'},
+    {id: 'google', title: 'Google Pay'},
 ]
+
+type ToastTone = 'success' | 'error' | 'info';
+
+type ToastMessage = {
+    id: number;
+    tone: ToastTone;
+    title: string;
+    message?: string;
+}
+
+function formatError(error: unknown) {
+    if (error instanceof Error) {
+        return error.message;
+    }
+
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    return 'An unexpected error occurred.';
+}
+
+function ToastViewport({toasts, onDismiss}: {
+    toasts: ToastMessage[];
+    onDismiss: (id: number) => void;
+}) {
+    return (
+        <div
+            aria-live="polite"
+            className="pointer-events-none fixed top-4 right-4 z-50 flex w-full max-w-sm flex-col gap-3 px-4 sm:px-0"
+        >
+            {toasts.map((toast) => (
+                <div
+                    key={toast.id}
+                    className="pointer-events-auto flex gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-lg"
+                >
+                    {toast.tone === 'success' ? (
+                        <CheckCircleIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-green-600"/>
+                    ) : toast.tone === 'error' ? (
+                        <ExclamationCircleIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600"/>
+                    ) : (
+                        <CheckCircleIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-indigo-600"/>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900">{toast.title}</p>
+                        {toast.message && <p className="mt-1 text-sm text-gray-600">{toast.message}</p>}
+                    </div>
+                    <button
+                        type="button"
+                        className="-m-1.5 rounded-md p-1.5 text-gray-400 hover:text-gray-600 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600"
+                        onClick={() => onDismiss(toast.id)}
+                    >
+                        <span className="sr-only">Dismiss notification</span>
+                        <XMarkIcon aria-hidden="true" className="size-5"/>
+                    </button>
+                </div>
+            ))}
+        </div>
+    )
+}
 
 
 function ContactInfo() {
@@ -400,8 +460,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0])
     const [layout, setLayout] = useState<FormLayoutName>('stack');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [paymentError, setPaymentError] = useState<string | undefined>();
-    const [paymentComplete, setPaymentComplete] = useState<string | undefined>();
+    const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const cardElementId = `cardform-${layout}`;
     const cardFieldsId = `cardfields`;
     const fieldsRefs: FieldsReferences = {
@@ -429,8 +488,19 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
         }
     };
 
+    const notify = (tone: ToastTone, title: string, message?: string) => {
+        const id = Date.now();
+        setToasts((current) => [...current, {id, tone, title, message}]);
+        window.setTimeout(() => {
+            setToasts((current) => current.filter((toast) => toast.id !== id));
+        }, tone === 'error' ? 8000 : 5000);
+    }
+
+    const dismissToast = (id: number) => {
+        setToasts((current) => current.filter((toast) => toast.id !== id));
+    }
+
     useEffect(() => {
-        console.log(`Updating formDisables ${cardFormComplete} ${cardFieldsComplete}`);
         setFormDisabled(!(cardFormComplete || cardFieldsComplete));
     }, [cardFormComplete, cardFieldsComplete])
 
@@ -439,65 +509,53 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
         const api = getActiveApi();
         if (!api) {
-            console.warn(`Aborting submit as instances not ready`);
+            notify('error', 'Payment element is not ready', 'Complete the payment details before confirming the order.');
             return;
-        } // not ready yet
+        }
 
         try {
             setIsSubmitting(true);
 
-            // 1) Create a token from the mounted card element(s)
-            console.log("[cp-demo] Tokenising card")
             const tokenResult = await api.tokenise();
 
-            // 2) Attach token to an intent (if your flow uses intents)
-            console.log("[cp-demo] Attaching token")
             await api.attach({
                 token: tokenResult.token,
                 select: true,
                 intentId: paymentSession.paymentIntentId
             });
 
-            // 3) Confirm the payment (3DS may happen here)
             const confirmResult = await api.confirm({});
 
             if (confirmResult.status == 'error') {
-                setPaymentError(confirmResult.error.message);
+                throw new Error(confirmResult.error.message);
             } else if (confirmResult.status == 'requires_authorisation') {
 
-                ServerConnection.authorise(paymentSession.paymentIntentId)
-                .then(async (auth) => {
+                const auth = await ServerConnection.authorise(paymentSession.paymentIntentId);
 
-                    if (auth.authorised) {
-                        return ServerConnection.verifyAuth(paymentSession.paymentIntentId)
+                if (!auth.authorised) {
+                    throw new Error("Payment not authorised");
+                }
 
-                    } else {
-                        throw new Error("Payment not authorised")
-                    }
-                }).then((verifyResult: VerifyAuthResponse) => {
-                    if (verifyResult.status === 'success') {
-                        setPaymentComplete(`Payment authorised on card. Verified authcode: ${verifyResult.auth.authcode}`)
-                    } else {
-                        throw new Error("Payment authorised but not verified")
-                    }
-                }).catch((ex) => {
-                    console.error(ex)
-                    setPaymentError(ex)
-                }).finally(() => {
-                    setIsSubmitting(false);
-                })
+                const verifyResult: VerifyAuthResponse = await ServerConnection.verifyAuth(paymentSession.paymentIntentId)
+
+                if (verifyResult.status === 'success') {
+                    notify('success', 'Payment authorised', `Verified auth code: ${verifyResult.auth.authcode}`);
+                } else {
+                    throw new Error("Payment authorised but not verified")
+                }
+            } else {
+                notify('success', 'Payment confirmed');
             }
-
-            // Handle success UI...
         } catch (err) {
-            console.error('>>> Error during payment processing:', err);
-            setPaymentError('Error during payment processing')
+            notify('error', 'Payment failed', formatError(err));
+        } finally {
             setIsSubmitting(false);
         }
     }
 
     return (
         <div className="bg-gray-50">
+            <ToastViewport toasts={toasts} onDismiss={dismissToast}/>
             <div className="mx-auto max-w-2xl px-4 pt-16 pb-24 sm:px-6 lg:max-w-7xl lg:px-8">
                 <h2 className="sr-only">Checkout</h2>
 
@@ -510,7 +568,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
                         {/* Payment */}
                         <div className="mt-10 border-t border-gray-200 pt-10">
-                            <h2 className="text-lg font-medium text-gray-900">Payment {formDisabled ? "DIS" : "EN"}</h2>
+                            <h2 className="text-lg font-medium text-gray-900">Payment</h2>
                             <fieldset className="mt-4">
                                 <legend className="sr-only">Payment type</legend>
                                 <div className="space-y-4 sm:flex sm:items-center sm:space-y-0 sm:space-x-10">
@@ -569,13 +627,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                   updateField("name", "name-wrap", "name-label", "Name on card");
                                   updateField("pan", "pan-wrap", "pan-label", "Card number");
 
-
-                                  if (c.complete) {
-                                      console.log('CardFields complete');
-                                      setCardFieldsComplete(true);
-                                  } else {
-                                      setCardFieldsComplete(false);
-                                  }
+                                  setCardFieldsComplete(Boolean(c.complete));
                               }} cscElement={""} expiryElement={""} panElement={""} nameElement={""}/>
                         </>
                         }
@@ -626,16 +678,11 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                 }}
                                 cardSchemesDisplay={'dynamic-inline'}
                                 onChange={async (cs: { complete?: boolean }) => {
-                                    console.log('>>>onChange', cs)
-                                    if (cs.complete) {
-                                        console.log('>>>complete')
-                                        setCardFormComplete(true)
-                                    } else {
-                                        setCardFormComplete(false)
-                                    }
+                                    setCardFormComplete(Boolean(cs.complete))
                                 }}
-                                onError={(err: unknown) => {console.error(`>>> onError handler: `, err)}}
-                                onTokeniseEnd={(p: unknown) => console.warn('>>> onTokeniseEnd: ', p)}
+                                onError={(err: unknown) => {
+                                    notify('error', 'Payment element error', formatError(err))
+                                }}
                             />
 
                         <ApplepayElement
@@ -645,28 +692,21 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                 label: 'GBP'
                             }}
                             appearance={{
-                                type: 'donate',
+                                type: 'buy',
                                 style: 'white'
                             }}
                             onAuthoriseEnd={async () => {
-                                setPaymentComplete(`Payment authorised via ApplePay. Verifying...`)
                                 const intentId = await elementsCtx?.getPaymentIntentId()
                                 if (!intentId) throw new Error('intentId is required')
-                                console.log('Verifying intent ', intentId)
                                 const v = await elementsCtx?.verifyPaymentIntentAuth()
-                                console.log('Verified intent ', v)
                                 if (v && v.status === 'success') {
-                                    setPaymentComplete(`Payment authorised via ApplePay. Verified auth: ${v.auth.authcode}`)
+                                    notify('success', 'Apple Pay authorised', `Verified auth code: ${v.auth.authcode}`)
                                 } else {
-                                    setPaymentError(`Payment verification failed`)
+                                    notify('error', 'Apple Pay verification failed')
                                 }
                             }}
                             />
                         {paymentMethod.id === 'google' && <p>Google TODO</p>}
-                        <div className={"text-green-800"}>{ paymentComplete }</div>
-                        <div className={"text-red-800"}>{ paymentError }</div>
-
-
                     </div>
                     <OrderSummary formDisabled={formDisabled || isSubmitting}/>
                 </form>
@@ -678,6 +718,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 export default function App() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
+    const [sessionError, setSessionError] = useState<string | undefined>()
 
     useEffect(() => {
         ServerConnection.checkServerConnection()
@@ -686,9 +727,25 @@ export default function App() {
             }).then(session => {
                 setPaymentSession(session)
             }).catch(ex => {
-                console.error(ex)
+                setSessionError(formatError(ex))
             })
     }, []);
+
+    if (sessionError) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+                <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 shadow-sm">
+                    <div className="flex gap-3">
+                        <ExclamationCircleIcon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-600"/>
+                        <div>
+                            <h1 className="text-base font-semibold text-gray-900">Unable to start checkout demo</h1>
+                            <p className="mt-2 text-sm text-gray-600">{sessionError}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     if (!paymentSession) {
         return <>loading payment session...</>
