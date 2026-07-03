@@ -1,0 +1,21 @@
+{
+  "name": "@citypay/elements-demo-server",
+  "version": "1.0.0",
+  "description": "An express server that can be used as a demo backend for any Citypay Elements demo projects",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "certs:win": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-local-certs.ps1",
+    "certs:bash": "bash ./scripts/generate-local-certs.sh"
+  },
+  "author": "CityPay",
+  "license": "ISC",
+  "dependencies": {
+    "@citypay/sdk": "2.1.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}

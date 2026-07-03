@@ -1,56 +1,27 @@
 {
-  "name": "@citypay/sdk-elements-test",
+  "name": "@citypay/elements-react-root",
   "version": "0.1.0",
-  "private": false,
-  "packageManager": "pnpm@10.24.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
-    "dev": "next dev --experimental-https",
-    "build:dev": "next build --turbopack",
-
-    "build:lib": "tsup",
-    "prepack": "pnpm build:lib",
-
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "default": "./dist/index.mjs"
-    }
-  },
-  "sideEffects": false,
-  "peerDependencies": {
-    "react": "^19",
-    "react-dom": "^19"
-  },
-  "dependencies": {
-    "@citypay/sdk": "2.0.5",
-    "next": "16.0.7",
-    "react": "19.2.1",
-    "react-dom": "19.2.1"
+    "citypay-init": "node scripts/citypay-init.mjs",
+    "lib:build": "pnpm --filter '@citypay/elements-react' build",
+    "lib:lint": "pnpm --filter '@citypay/elements-react' lint",
+    "lib:pack:dry-run": "pnpm --filter '@citypay/elements-react' pack --dry-run",
+    "demo:certs:bash": "pnpm -r certs:bash",
+    "demo:certs:win": "pnpm -r certs:win",
+    "demo:dev": "pnpm lib:build && pnpm --parallel --filter '@citypay/elements-react-demo' --filter '@citypay/elements-demo-server' dev",
+    "demo:build": "pnpm lib:build && pnpm --filter '@citypay/elements-react-demo' build",
+    "demo:lint": "pnpm --filter '@citypay/elements-react-demo' lint",
+    "verify": "pnpm lib:build && pnpm lib:lint && pnpm demo:build && pnpm demo:lint && pnpm lib:pack:dry-run"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@heroicons/react": "2.2.0",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.5.4",
-    "tailwindcss": "^4",
-    "tsup": "^8.0.0",
-    "typescript": "^5"
+    "@eslint/js": "9.39.4",
+    "@typescript-eslint/eslint-plugin": "8.59.2",
+    "@typescript-eslint/parser": "8.59.2",
+    "globals": "14.0.0"
   }
 }

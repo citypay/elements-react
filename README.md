@@ -1,212 +1,348 @@
-# CityPay Elements React (elements-react)
+# CityPay Elements React (@citypay/elements-react) and Associated Demo
 
-A lightweight React wrapper and example app for CityPay Elements. It shows how to securely capture and process card payments in a React/Next.js application using CityPay's Payment Intent APIs. It covers tokenisation, attach, confirmation, and optional authorisation (including 3‑D Secure when required).
+A lightweight React wrapper and example app for CityPay Elements. It shows how to securely capture and process card 
+payments in a React application using CityPay's Payment Intent APIs. It covers tokenisation, attach, 
+confirmation, and optional authorisation (including 3‑D Secure when required).
 
-This repository contains an example Next.js app and reusable components/hooks you can mirror in your own React project.
+This repository contains the source for the @citypay/elements-react React components, a Vite React demo app, and a
+separate Express demo server for secure payment operations.
+
+## Demo QuickStart
+
+From the repository root:
+
+1. Initialise the demo:
+   ```bash
+   pnpm citypay-init
+   ```
+
+2. Start the demo:
+   ```bash
+   pnpm demo:dev
+   ```
+
+3. Open:
+   ```text
+   https://localhost:3000
+   ```
+
+If `pnpm` is not available yet, enable it through Corepack first:
+
+```bash
+corepack enable
+corepack prepare pnpm@11.9.0 --activate
+```
 
 ## What is inside
 
-- Next.js example application showing a typical payment flow
-- Reusable building blocks:
-  - CityPayProvider component to initialise Elements and provide context
-  - CardElement component to collect card details via a secure iframe
-  - Hooks to access and control the Elements instance (useElement, useCardElement)
-- Serverless API route example for creating a Payment Intent session
-- Environment-based configuration for your CityPay account
+- Vite React example application showing a simple checkout page and the available payment options.
+- Node Express HTTPS server to support the secure server-side functionality required by the example application.
+- Environment-based configuration for your CityPay account.
+- Source code for the referenced @citypay/elements-react components.
 
 ## Prerequisites
 
-- React 18+ (this repo uses React 19) with Next.js 15/16 App Router
+- React 18+ (this repo uses React 19)
+- Node 22.13+ for pnpm 11
+- pnpm v11+ (this repo is configured and tested as a pnpm workspace)
 - A CityPay account with API credentials
-- Server capability to create Payment Intent sessions (Next.js route example included)
 
-## Installation
+## Detailed Setup
 
-This repository is a working example. If you’re integrating into your own app, install the CityPay SDK for your server logic:
+This repository is packaged as a pnpm workspace. Use pnpm for installing dependencies and running the root workspace
+scripts.
+
+### Baseline pnpm setup
+
+1. From the repository root, enable pnpm through Corepack if pnpm is not already available:
+   ```bash
+   corepack enable
+   corepack prepare pnpm@11.9.0 --activate
+   ```
+
+2. Initialise the local demo:
+   ```bash
+   pnpm citypay-init
+   ```
+
+   This installs workspace dependencies, builds the local `@citypay/elements-react` package, generates local HTTPS
+   certificates for both the React app and secure server, then prompts for the CityPay credentials used to create the
+   package `.env.local` files. The initializer detects Windows vs macOS/Linux and runs the appropriate certificate and
+   environment setup commands.
+
+   You can rerun `pnpm citypay-init` safely. Existing certificates are kept unless you choose to regenerate them, and
+   existing environment values are shown as defaults. The licence key is displayed only as a masked value.
+
+**Note:** Payment flows require HTTPS throughout, and that HTTPS certificates are derived from a trusted root CA.
+The certificate scripts use `mkcert` when it is available. If `mkcert` is not installed, they fall back to OpenSSL and
+generate self-signed certificates, which your browser may require you to manually trust or accept.
+
+3. Start the demo:
+   ```bash
+   pnpm demo:dev
+   ```
+
+4. Open https://localhost:3000.
+
+### Manual setup commands
+
+If you prefer to run the init steps separately, use:
 
 ```bash
-pnpm add @citypay/sdk
-# or
-npm install @citypay/sdk
+pnpm install
+pnpm demo:certs:bash
+./setup-env.sh
 ```
 
-The Elements UI is initialised by the components in src/components of this repository (no separate npm package required here).
+On Windows PowerShell, use:
 
-## Quick start
-
-1) Configure environment variables (server-side)
-
-Create a .env.local with your CityPay credentials for the server route:
-
-```
-CITYPAY_CLIENT_ID=your_client_id
-CITYPAY_LICENCE_KEY=your_licence_key
-CITYPAY_MERCHANT_ID=12345678
+```powershell
+pnpm install
+pnpm demo:certs:win
+Set-ExecutionPolicy -Scope Process Bypass
+.\setup-env.ps1
 ```
 
-2) Create an API route to create a Payment Session (Next.js App Router)
+### npm or yarn
 
-File: src/app/api/payment-session/route.ts
+Use pnpm for this repository even if you normally prefer npm or yarn. The workspace is defined in
+`pnpm-workspace.yaml`, package links use `workspace:*`, and the root scripts call pnpm workspace commands such as
+`pnpm -r` and `pnpm --filter`.
 
-```ts
-import { NextResponse } from 'next/server';
-import { CityPay } from '@citypay/sdk';
+Do not mix package managers in the same checkout. Running npm or yarn install commands can create different lockfiles
+and dependency layouts that are not covered by this demo setup.
 
-export async function POST() {
-  const clientId = process.env.CITYPAY_CLIENT_ID;
-  const licenceKey = process.env.CITYPAY_LICENCE_KEY;
-  const mid = process.env.CITYPAY_MERCHANT_ID;
+If your machine has a global `@citypay` registry configured for CodeArtifact, a repo-local `.npmrc` can override that
+for this checkout. This is useful when the demo server must resolve `@citypay/sdk` from the public npm registry rather
+than CodeArtifact.
 
-  if (!clientId || !licenceKey || !mid) {
-    return NextResponse.json({ error: 'Missing required environment variables' }, { status: 500 });
-  }
+## Running the Demo
 
-  const citypay = new CityPay(clientId, licenceKey, { sandbox: true });
-
-  try {
-    const result = await citypay.paymentIntents.create({
-      merchantid: Number(mid),
-      amount: 1001, // minor units
-      currency: 'GBP',
-      identifier: 'your-cart-ref',
-      billTo: {
-        title: 'Mr',
-        firstname: 'N',
-        lastname: 'Person',
-        email: 'n.person@example.com',
-        address1: '123 Example Street',
-        address2: 'Example City',
-        address3: 'Example County',
-        country: 'GB',
-        postcode: 'JE3 3QA',
-      },
-    });
-
-    return NextResponse.json(result, { status: 200 });
-  } catch (e) {
-    // @ts-ignore
-    console.error('Error creating payment intent:', e, e?.meta);
-    return NextResponse.json({ error: 'Failed to create payment intent' }, { status: 500 });
-  }
-}
-```
-
-3) Provide CityPay Elements in your app
-
-Use the CityPayProvider to initialise Elements. You pass a public key (pubKey) for the Elements UI and a function that fetches a new Payment Intent session from your server route.
-
-Example (wrapping a page/component):
-
-```tsx
-'use client'
-import { CityPayProvider } from '@/components/CityPayProvider'
-
-export default function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <CityPayProvider
-      pubKey={process.env.NEXT_PUBLIC_CITYPAY_PUBLIC_KEY}
-      createServerIntent={async () => {
-        const resp = await fetch('/api/payment-session', { method: 'POST' })
-        if (!resp.ok) throw new Error('Failed to create payment session')
-        return resp.json()
-      }}
-    >
-      {children}
-    </CityPayProvider>
-  )
-}
-```
-
-4) Collect card details and complete the payment flow (React)
-
-Use the CardElement and the Elements API methods tokenise → attach → confirm. If confirm returns requires_authorisation, call your server to authorise.
-
-```tsx
-'use client'
-import { useState, useEffect } from 'react'
-import { useElement } from '@/components/CityPayProvider'
-import { CardElement } from '@/components/CardElement'
-import type { PaymentIntentSession } from '@citypay/sdk'
-
-export function Checkout({ paymentSession }: { paymentSession: PaymentIntentSession }) {
-  const elements = useElement('default')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | undefined>()
-  const [success, setSuccess] = useState<string | undefined>()
-
-  useEffect(() => {
-    if (elements) {
-      elements.onError((err: any) => console.error('Elements error:', err))
-    }
-  }, [elements])
-
-  const pay = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!elements) return
-    setError(undefined)
-    setIsSubmitting(true)
-    try {
-      const { token } = await elements.tokenise()
-      await elements.attach({ token, select: true, intentId: paymentSession.paymentIntentId })
-      const confirm = await elements.confirm({})
-
-      if (confirm.status === 'error') {
-        setError(confirm.error.message)
-      } else if (confirm.status === 'requires_authorisation') {
-        const resp = await fetch('/api/auth', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ intentId: paymentSession.paymentIntentId })
-        })
-        const auth = await resp.json()
-        if (auth.authorised) setSuccess(`Payment authorised: ${auth.auth_code}`)
-        else setError(`Payment authorisation failed: ${auth.result_code}: ${auth.result_message}`)
-      } else if (confirm.status === 'succeeded') {
-        setSuccess('Payment complete')
-      }
-    } catch (e: any) {
-      setError(e.message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <form onSubmit={pay}>
-      <CardElement id="card" />
-      <button type="submit" disabled={isSubmitting}>Pay</button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
-    </form>
-  )
-}
-```
-
-## API overview
-
-- CityPayProvider
-  - Props: pubKey, createServerIntent
-  - Provides the Elements context to child components and manages Element instances
-- CardElement
-  - Mounts a secure iframe-based card entry field
-  - Props include id and style/options passed through to Elements
-- useElement(key?: string)
-  - Access the Elements instance by key ("default" if omitted)
-  - Methods: tokenise(), attach({ token, intentId, select }), confirm(options), onError(handler)
-- useCardElement(id, options, handlers)
-  - Lower-level hook that gives you a containerRef to mount a specific card form and subscribe to change/ready events
-
-## Development scripts
-
-- Install dependencies: pnpm install
-- Run the example app (HTTPS dev server): pnpm dev
-- Build for production: pnpm build
-- Start production server: pnpm start
+From the repository root, run ```pnpm demo:dev``` to start the demo application. It is usually available at https://localhost:3000
 
 ## Notes
 
-- Always create intents on your server. Never expose secret credentials on the client.
-- Handle 3DS redirects/popups that confirm() may trigger.
-- Use your own returnUrl when confirming if your flow requires navigation after 3DS.
+- All payments will be sent to the CityPay sandbox API servers. No payments will be taken.
+- Although this demo includes ApplePay, no ApplePay visuals or functions will be available until you complete a domain 
+  registration and verification with Apple. See [CityPay's Online Documentation](https://docs.citypay.com/elements)
+- You will be limited to the products and services that you possess licences for with CityPay.
+
+## Troubleshooting
+
+This section covers common issues encountered when setting up and running the demo application.
+
+### Setup & Environment Issues
+
+#### Setup script fails or does not run
+
+If `setup-env.sh` or `setup-env.ps1` fails:
+
+- Ensure the script is executable (macOS/Linux):
+  ```bash
+  chmod +x ./setup-env.sh
+  ```
+
+- On macOS/Linux, ensure you are using a compatible shell (bash/zsh)
+
+- On Windows, ensure PowerShell execution is enabled:
+  ```powershell
+  Set-ExecutionPolicy -Scope Process Bypass
+  ```
+
+- As a fallback, create the `.env.local` files manually:
+
+**packages/demo-server/.env.local**
+```
+EX_CP_CLIENT_ID=PCxxxxxx
+EX_CP_LICENSE_KEY=xxxxxxx
+EX_CP_MID=xxxxxxx
+```
+
+**packages/demo-react/.env.local**
+```
+VITE_EX_CP_PUBLIC_KEY=pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+#### Environment variables not being picked up
+
+**Symptoms:**
+- API calls failing with authentication errors
+- Undefined environment variables in logs
+
+**Checks:**
+- Restart the dev app and server
+- Ensure `.env.local` files are present in packages/demo-server and packages/demo-react
+- Confirm no `.env` or similar file are overriding the `.env.local` files
+- Verify there are no trailing spaces or quotes in values in `.env.local` files
+
+
+### Dependency Issues
+
+#### `pnpm install` fails
+
+- Ensure pnpm is installed:
+  ```bash
+  pnpm -v
+  ```
+
+- Recommended: pnpm v11+
+
+- Clear cache and retry:
+  ```bash
+  pnpm store prune
+  pnpm install
+  ```
+
+- Delete lockfile and node_modules if needed:
+  ```bash
+  rm -rf node_modules pnpm-lock.yaml
+  pnpm install
+  ```
+
+#### Using npm or yarn instead of pnpm
+
+This repo uses pnpm workspaces and is not tested with npm or yarn. Use pnpm inside this checkout, even if npm or yarn
+is your default package manager elsewhere.
+
+### HTTPS & Certificate Issues
+
+#### Browser shows “Not Secure” or blocks requests
+
+- Ensure `pnpm demo:certs:*` was run successfully
+- Restart your browser after certificate installation
+- Ensure mkcert root CA is installed and trusted
+
+#### mkcert not installed
+
+Install mkcert:
+
+- macOS (Homebrew):
+  ```bash
+  brew install mkcert
+  brew install nss
+  ```
+
+- Then run:
+  ```bash
+  mkcert -install
+  ```
+
+### Runtime / Server Issues
+
+#### App does not start on https://localhost:3000
+
+- Check if port 3000 is already in use:
+  ```bash
+  lsof -i :3000
+  ```
+
+- Kill the conflicting process or change port
+
+#### API calls failing from frontend
+
+- Confirm demo server is running
+- Check server logs in `packages/demo-server`
+- Verify environment variables are correct
+
+
+#### CORS errors
+
+- Ensure frontend and backend are both running over HTTPS
+- Confirm both are using matching localhost origins
+
+### Payment Flow Issues
+
+#### Payment fails immediately
+
+- Verify API credentials
+- Ensure sandbox environment is being used
+- Confirm MID and licence key are valid
+
+#### 3-D Secure not triggering when expected
+
+- Not all test cards trigger 3DS
+- Use appropriate test card numbers per CityPay documentation
+
+#### Tokenisation or attach step fails
+
+- Inspect network requests in browser DevTools
+- Confirm Payment Intent was successfully created
+- Ensure client is using correct public key
+
+### Apple Pay Issues
+
+Apple Pay requires additional setup beyond this demo:
+
+- Domain verification
+- Apple Merchant ID
+- Payment processing certificate
+
+If Apple Pay does not appear:
+
+- Ensure you are using Safari
+- Confirm domain is properly verified with Apple
+
+### Antivirus / Security Software Interference
+
+#### Local HTTPS server blocked
+
+- Ensure Node.js is allowed by your security software
+- Whitelist the project directory if necessary
+
+#### Repeated “suspicious activity” warnings
+
+- Some antivirus tools (e.g. Avast) may block:
+   - local HTTPS servers
+   - Node processes
+   - development tooling
+
+Fix:
+- Add exclusions for your project directory
+- Ensure Node.js is allowed
+- Consider disabling behaviour/ransomware shields for development
+
+### Build / Frontend Issues
+
+#### Vite build or dev server errors
+
+- Ensure Node version is compatible (Node 22.13+ is recommended for pnpm 11)
+- Rebuild the local library and demo:
+  ```bash
+  pnpm demo:build
+  ```
+
+#### Changes not reflecting in browser
+
+- Clear browser cache
+- Restart dev server
+- Check for multiple running instances
+
+### General Debugging Tips
+
+- Use browser DevTools → Network tab to inspect API calls
+- Check server logs for backend errors
+- Validate all credentials independently
+- Restart everything after config changes:
+   - dev server
+   - browser
+   - certificate trust (if changed)
+
+### Still Stuck?
+
+If you continue to experience issues:
+
+- Verify each step of the QuickStart was completed
+- Check logs on both client and server
+- Cross-reference with CityPay API documentation:  
+  https://docs.citypay.com/elements
+
+Include the following when seeking support:
+
+- Error messages (full text)
+- Browser + OS
+- Node + pnpm versions
+- Relevant log output
+
 
 ## CityPay Elements flow
 

@@ -1,0 +1,77 @@
+name: Publish npm package
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run publish as a dry run
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish @citypay/elements-react
+    runs-on: ubuntu-latest
+    environment: npm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --config.confirmModulesPurge=false
+
+      - name: Build library
+        run: pnpm lib:build
+
+      - name: Lint library
+        run: pnpm --filter '@citypay/elements-react' lint
+
+      - name: Verify release tag matches package version
+        if: ${{ github.event_name == 'release' }}
+        working-directory: packages/lib
+        run: |
+          PACKAGE_TAG="v$(node -p "require('./package.json').version")"
+          if [ "${GITHUB_REF_NAME}" != "${PACKAGE_TAG}" ]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match package version ${PACKAGE_TAG}."
+            exit 1
+          fi
+
+      - name: Check npm package contents
+        working-directory: packages/lib
+        run: pnpm pack --dry-run
+
+      - name: Publish dry run
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        working-directory: packages/lib
+        run: pnpm publish --access public --dry-run --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
+        working-directory: packages/lib
+        run: pnpm publish --access public --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
