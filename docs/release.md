@@ -7,6 +7,7 @@ This repository publishes the React package from `packages/lib` as `@citypay/ele
 Run these locally when dependencies are installed:
 
 ```bash
+nvm use
 pnpm install --frozen-lockfile --config.confirmModulesPurge=false
 pnpm verify
 ```
