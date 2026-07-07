@@ -1,6 +1,6 @@
 {
   "name": "@citypay/elements-react-root",
-  "version": "1.0.6-next",
+  "version": "1.0.6",
   "private": false,
   "packageManager": "pnpm@11.9.0",
   "engines": {
