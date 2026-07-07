@@ -53,3 +53,4 @@ certificates
 
 .idea
 public/.well-known/
+/scripts/npm-release.sh
