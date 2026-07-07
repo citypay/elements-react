@@ -1,16 +1,15 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid'
 import {CheckCircleIcon, ExclamationCircleIcon, TrashIcon, XMarkIcon} from '@heroicons/react/20/solid'
 import {useEffect, useRef, useState, type FormEvent} from "react";
-import {CardForm} from "@/components/FieldsCardForm";
+import {FieldsCardForm} from "@/components/FieldsCardForm";
 
 import {
     ApplepayElement,
     CardElement,
     CardFields,
-    CardFieldsProvider,
     CityPayElements,
     CityPayProvider,
-    FieldsReferences,
+    FieldReferences,
     FormLayoutName,
     PaymentIntentSession,
     useElements,
@@ -463,7 +462,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const cardElementId = `cardform-${layout}`;
     const cardFieldsId = `cardfields`;
-    const fieldsRefs: FieldsReferences = {
+    const fieldsRefs: FieldReferences = {
         csc: useRef(null),
         expiry: useRef(null),
         name: useRef(null),
@@ -595,9 +594,9 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
                         {paymentMethod.id === 'credit-card-form' &&
                           <>
-                            <CardForm refs={fieldsRefs}/>
+                            <FieldsCardForm refs={fieldsRefs}/>
                             <CardFields
-                              refs={fieldsRefs}
+                              fieldReferences={fieldsRefs}
                               showCardIcon={true}
                               onChange={(c: any) => {
 
@@ -628,7 +627,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                   updateField("pan", "pan-wrap", "pan-label", "Card number");
 
                                   setCardFieldsComplete(Boolean(c.complete));
-                              }} cscElement={""} expiryElement={""} panElement={""} nameElement={""}/>
+                              }}/>
                         </>
                         }
                         {paymentMethod.id === 'credit-card' && (
@@ -760,9 +759,7 @@ export default function App() {
                          middleware={{
                             verifyAuth: VERIFY_AUTH_PATH
                          }}>
-            <CardFieldsProvider identifier={'cardfields'}>
                 <FormExample paymentSession={paymentSession} />
-            </CardFieldsProvider>
         </CityPayProvider>
     </>
 

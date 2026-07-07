@@ -1,6 +1,6 @@
-import type {FieldsReferences} from "@citypay/elements-react";
+import type {FieldReferences} from "@citypay/elements-react";
 
-export function CardForm({refs}: { refs: FieldsReferences }) {
+export function FieldsCardForm({refs}: { refs: FieldReferences }) {
     const styles = {
         card: {
             width: "100%",
