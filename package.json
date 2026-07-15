@@ -2,7 +2,7 @@
   "name": "@citypay/elements-react-root",
   "version": "1.0.7-next",
   "private": false,
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": ">=22.13"
   },
