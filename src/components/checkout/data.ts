@@ -38,7 +38,6 @@ export const paymentMethods: PaymentMethod[] = [
 
 export const widgetLayoutOptions: Array<{value: WidgetLayout; label: string}> = [
     {value: 'stack', label: 'Stack'},
-    {value: 'stack-compact', label: 'Stack Compact'},
     {value: 'row', label: 'Row'},
     {value: 'row-compact', label: 'Row Compact'},
     {value: 'row-minimal', label: 'Row Minimal'},

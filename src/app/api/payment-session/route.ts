@@ -1,16 +1,20 @@
 import {NextResponse} from "next/server";
-import {CityPay} from "@citypay/sdk";
+import {
+    CardOnFileBehaviours,
+    CityPay,
+    ConsentCaptureModes,
+} from "@citypay/sdk";
+
+function futureUtcDateOnly(daysFromToday: number): Date {
+    const date = new Date();
+    date.setUTCHours(0, 0, 0, 0);
+    date.setUTCDate(date.getUTCDate() + daysFromToday);
+    // The SDK request type is Date, but this API field requires a date-only JSON value.
+    date.toJSON = () => date.toISOString().substring(0, 10);
+    return date;
+}
 
 export async function POST() {
-
-    // if (true) {
-    //     return NextResponse.json( {
-    //         "exp": 1763495582468,
-    //         "opaqueKey": "9DffP7K3TKPATERMafCtcNAAwnjHLGPScLHp4HHE7bZL",
-    //         "paymentIntentId": "pi_1imft4ryd2a9f0g8p1qvquzvjj2",
-    //         "sessionToken": "sandbox_VBBUp74iUkPFne3x9acXbs4xnpoMoT1hXLJqufEK5aVvs6pP8xQUF1ezh6WZWaL1kQBAcQHzHhVsePWHZ7bgwe6MkQhLGNnya7pxiAFvc2fm9ZMhBgrSSsFuzY66uDky2yMKuA1iw7SswgQt7stFHqpixpAvCck6gfYpfDhDdFaWyjw1w331R9thktv9TTT1AXBdZtPMAgGtjdz2mDiT6ggLmq1MgB2RM9dqd5XyLPqVPUeJvNGr8qykNMi2ix.78VJqrkksdEg8BeEhaHm68qCSAY81UK24ZuD7MKU75p8"
-    //     }, {status: 200});
-    // }
 
     const clientId = process.env.CITYPAY_CLIENT_ID
     const licenceKey = process.env.CITYPAY_LICENCE_KEY
@@ -25,12 +29,20 @@ export async function POST() {
     })
 
     try {
+        const nextDate = futureUtcDateOnly(30);
+        const endDate = futureUtcDateOnly(365);
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            account_id: "123",
+            // Demo-only account. Production integrations should use the authenticated customer's stable account id.
+            accountId: `demo-account-${crypto.randomUUID()}`,
             amount: 0,
             currency: "GBP",
             identifier: `cart-id-${crypto.randomUUID()}`,
+            cardHolderAccount: {
+                storeCard: true,
+                consentCaptureMode: ConsentCaptureModes.CityPayOptIn,
+                cardOnFileBehaviour: CardOnFileBehaviours.SetDefault,
+            },
             billTo: {
                 title: "Mr",
                 firstname: "N",
@@ -44,22 +56,20 @@ export async function POST() {
             },
             recurringIntent: {
                 count: 12,
-                endDate: "2026-12-31",
+                endDate,
                 fixedAmount: true,
                 fixedSchedule: true,
                 intervalDays: 30,
-                nextDate: "2026-04-01",
+                nextDate,
                 recurringAmount: 999
             }
         }, {
             // idempotencyKey: "unique-idempotency-key"
         })
 
-        console.log("Payment intent created:", result);
         return NextResponse.json(result, {status: 200})
-    } catch (e) {
-        // @ts-ignore
-        console.error("Error creating payment intent:", e, e?.meta);
+    } catch {
+        console.error("Payment intent creation failed");
         return NextResponse.json({error: "Failed to create payment intent"}, {status: 500});
     }
 

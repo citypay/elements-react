@@ -6,10 +6,8 @@
   "scripts": {
     "dev": "next dev --experimental-https",
     "build:dev": "next build --turbopack",
-
     "build:lib": "tsup",
     "prepack": "pnpm build:lib",
-
     "start": "next start",
     "lint": "eslint"
   },
@@ -35,7 +33,7 @@
     "react-dom": "^19"
   },
   "dependencies": {
-    "@citypay/sdk": "2.0.5",
+    "@citypay/sdk": "file:../citypay-sdk/packages/facade/dist",
     "next": "16.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1"

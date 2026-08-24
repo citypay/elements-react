@@ -22,17 +22,20 @@ export const ApplepayElement: React.FC<Props> = ({
     const applepayIdentifier = useApplepayElementIdentifier()
 
     const elementId = useMemo(() => {
+        if (typeof options.element !== 'string') {
+            return undefined;
+        }
         return options.element.startsWith('#') ? options.element.slice(1) : options.element;
         }, [options.element]);
 
     // Rebuild options with a normalised id string
     const normalisedOptions = useMemo<AltPaymentOptions>(() => ({
         ...options,
-        element: elementId,
+        element: elementId ?? options.element,
         identifier: applepayIdentifier
     }), [options, elementId, applepayIdentifier]);
 
-    const {containerRef, state} = useApplepayElement(normalisedOptions, {onAuthoriseEnd, onError})
+    const {containerRef} = useApplepayElement(normalisedOptions, {onAuthoriseEnd, onError})
     const {status, error}  = useElementsStatus()
 
     if (status == 'cpp:initialising') {

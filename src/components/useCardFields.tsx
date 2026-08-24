@@ -2,7 +2,7 @@
 
 import {RefObject, useEffect, useMemo, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
-import type {ElementsInstance} from './CityPayProvider';
+import type {CardFieldsElementInstance} from './CityPayProvider';
 import {CardFieldsElementOptions} from "@citypay/sdk";
 import {useCardFieldsContext} from "@/components/CardFieldsProvider";
 import {CpeFormHandlers} from "@/components/useCardElement";
@@ -23,7 +23,7 @@ export function useCardFields(
     const elementCtx = useCardFieldsContext();
     const {status: providerStatus, error: providerError} = useElementsStatus();
 
-    const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
+    const [elementsInstance, setElementsInstance] = useState<CardFieldsElementInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 

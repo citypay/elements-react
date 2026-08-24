@@ -3,7 +3,7 @@
 
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
-import type {ElementsInstance} from './CityPayProvider';
+import type {CardElementInstance} from './CityPayProvider';
 import type {CardElementOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
 import {useCardElementContext} from "@/components/CardElementProvider";
 
@@ -33,7 +33,7 @@ export function useCardElement(
     const mountedRef = useRef<boolean>(false);
 
     // const [form, setForm] = useState<any>();
-    const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
+    const [elementsInstance, setElementsInstance] = useState<CardElementInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
@@ -41,7 +41,7 @@ export function useCardElement(
         identifier: id,
         ...(baseOptions ?? {}),
         element: `#cp-form-${id}`,
-    }), []);
+    }), [id, baseOptions]);
 
     useEffect(() => {
         if (providerStatus !== 'cpp:ready') return;
@@ -54,7 +54,7 @@ export function useCardElement(
 
             const node = containerRef.current;
             // Pass the real HTMLElement if present; otherwise keep the selector and try once on next tick.
-            const initOptions = node ? { ...options, element: node as any } : options;
+            const initOptions = node ? {...options, element: node} : options;
 
             elementCtx.ensureElement(initOptions, setState)
                 .then(ref => {
@@ -98,7 +98,7 @@ export function useCardElement(
             throw new Error('No opts provided');
         }
 
-        const {element} = opts as CardElementOptions;
+        const {element} = opts;
         console.log('>>>> elementsInstance', element)
 
         if (!element) {

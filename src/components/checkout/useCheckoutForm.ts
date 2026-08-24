@@ -104,8 +104,8 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
             }
 
             setPaymentError('Payment verification failed');
-        } catch (error) {
-            console.error('ApplePay verification failed:', error);
+        } catch {
+            console.error('ApplePay verification failed');
             setPaymentError('Payment verification failed');
         }
     };
@@ -128,16 +128,28 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
             setPaymentError(undefined);
 
             const tokenResult = await api.tokenise();
+            if (tokenResult.status !== 'success') {
+                setPaymentError(tokenResult.error.message);
+                return;
+            }
+
+            if (tokenResult.provider !== 'CP_CARD') {
+                setPaymentError('Card tokenisation returned an unexpected payment provider');
+                return;
+            }
 
             const attachResult = await api.attach({
-                token: tokenResult.token,
-                select: true,
+                token: tokenResult.data.token,
+                storeCard: false,
                 intentId: paymentSession.paymentIntentId,
             });
-            console.log('>>> attachResult:', attachResult);
+
+            if (attachResult.status === 'requires_payment_method') {
+                setPaymentError(attachResult.error.message);
+                return;
+            }
 
             const confirmResult = await api.confirm({});
-            console.log('>>> confirmResult:', confirmResult);
 
             if (confirmResult.status === 'error') {
                 setPaymentError(confirmResult.error.message);
@@ -148,25 +160,22 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
                 return;
             }
 
-            const response = await fetch('/api/auth', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    intentId: paymentSession.paymentIntentId,
-                }),
+            const auth = await api.authoriseViaBackend({
+                endpoint: '/api/auth',
+                intentId: paymentSession.paymentIntentId,
             });
 
-            const auth = await response.json();
-            console.log(auth);
-
-            if (!auth.authorised) {
-                setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`);
+            if (auth.status === 'declined') {
+                setPaymentError(`Payment authorisation failed: ${auth.reason_code}: ${auth.message}`);
                 return;
             }
 
-            setPaymentComplete(`Payment authorised on card: ${auth.authcode}. Verifying auth...`);
+            if (auth.status === 'error') {
+                setPaymentError(`Payment authorisation failed: ${auth.error.code}: ${auth.error.message}`);
+                return;
+            }
+
+            setPaymentComplete(`Payment authorised on card: ${auth.auth_code}. Verifying auth...`);
 
             const intentId = await elements?.getPaymentIntentId();
             if (!intentId) {
@@ -174,18 +183,17 @@ export function useCheckoutForm(paymentSession: PaymentIntentSession) {
             }
 
             const verification: VerifyAuthResponse | undefined = await elements?.verifyPaymentIntentAuth();
-            console.log('Verify intent result', verification);
 
             if (verification?.status === 'success') {
                 setPaymentComplete(
-                    `Payment authorised on card: ${auth.authcode}. Verified auth: ${verification.auth.authcode}`,
+                    `Payment authorised on card: ${auth.auth_code}. Verified auth: ${verification.auth.authcode}`,
                 );
                 return;
             }
 
-            setPaymentError(`Payment authorisation failed: ${auth.resultCode}: ${auth.resultMessage}`);
-        } catch (error) {
-            console.error('>>> Error during payment processing:', error);
+            setPaymentError('Payment authorisation verification failed');
+        } catch {
+            console.error('Payment processing failed');
             setPaymentError('Error during payment processing');
         } finally {
             setIsSubmitting(false);

@@ -67,7 +67,7 @@ export function CheckoutForm({paymentSession, flowProviderProps}: Props) {
                                 <CardFields
                                     refs={fieldsRefs}
                                     options={{
-                                        id: 'cardfields',
+                                        identifier: 'cardfields',
                                         cscElement: '#cf-csc',
                                         expiryElement: '#cf-expiry',
                                         nameElement: '#cf-name',

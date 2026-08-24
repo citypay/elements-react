@@ -1,8 +1,8 @@
 'use client';
 
-import {SetStateAction, useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
-import type {ElementsInstance} from './CityPayProvider';
+import type {ApplePayElementInstance} from './CityPayProvider';
 import type {AltPaymentOptions, CpeChangeState, ElementsApi} from "@citypay/sdk";
 import {useApplepayElementContext} from "@/components/ApplepayProvider";
 
@@ -31,7 +31,7 @@ export function useApplepayElement(
     const formRef = useRef<any | null>(null);
     const mountedRef = useRef<boolean>(false);
 
-    const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
+    const [elementsInstance, setElementsInstance] = useState<ApplePayElementInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
@@ -45,7 +45,7 @@ export function useApplepayElement(
             if (cancelled) return;
 
             elementsRef.ensureElement(options, setState)
-                .then((ref: SetStateAction<ElementsInstance | undefined>) => {
+                .then((ref) => {
                     setElementsInstance(ref);
                 })
                 .catch((err: unknown) => {

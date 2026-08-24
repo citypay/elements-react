@@ -2,7 +2,7 @@
 
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {type HookState, useElementsStatus} from './CityPayProvider';
-import type {ElementsInstance} from './CityPayProvider';
+import type {FlowElementInstance} from './CityPayProvider';
 import {FlowOptions} from '@citypay/sdk';
 import {type CpeFormHandlers} from "@/components/useCardElement";
 import {useFlowElementContext} from "@/components/FlowElementProvider";
@@ -20,7 +20,7 @@ export function useFlowElement(
 
     const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const [elementsInstance, setElementsInstance] = useState<ElementsInstance | undefined>();
+    const [elementsInstance, setElementsInstance] = useState<FlowElementInstance | undefined>();
     const [state, setState] = useState<HookState>('el:idle');
     const [error, setError] = useState<Error | string | null>(null);
 
@@ -74,7 +74,7 @@ export function useFlowElement(
             throw new Error('No opts provided');
         }
 
-        const {element} = opts as FlowOptions;
+        const {element} = opts;
         console.log('>>>> flow elementsInstance', element)
 
         if (!element) {

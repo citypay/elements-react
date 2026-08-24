@@ -3,8 +3,6 @@ import {CityPay} from "@citypay/sdk";
 
 export async function GET(_req: Request, { params }:{params: Promise<{ intentId: string }>}) {
 
-    console.log('<> verify-auth')
-
     const { intentId } = await params
 
     const clientId = process.env.CITYPAY_CLIENT_ID
@@ -19,13 +17,16 @@ export async function GET(_req: Request, { params }:{params: Promise<{ intentId:
         sandbox: true,
     })
 
-    const result = await citypay.paymentIntents.verifyAuthorised({
-        payment_intent_id: intentId,
-        unmask_fields: []
-    })
+    try {
+        const result = await citypay.paymentIntents.verifyAuthorised({
+            payment_intent_id: intentId,
+            unmask_fields: []
+        })
 
-    console.log(result)
-
-    return NextResponse.json(result, {status: 200})
+        return NextResponse.json(result, {status: 200})
+    } catch {
+        console.error('Payment authorisation verification failed', {intentId});
+        return NextResponse.json({error: 'Payment authorisation verification failed'}, {status: 502});
+    }
 
 }

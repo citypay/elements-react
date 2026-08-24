@@ -17,8 +17,26 @@ import {
     CityPayElements,
     CityPayPromise,
     ElementsApi,
+    MiddlewareConfig,
     PaymentIntentSession,
 } from '@citypay/sdk';
+
+export type FlowApi = ReturnType<CityPayElements['paymentFlow']>;
+export type ElementOptions = CardElementOptions | CardFieldsElementOptions | AltPaymentOptions | FlowOptions;
+export type ElementApi = ElementsApi | FlowApi;
+
+export type ElementsInstance<
+    TApi extends ElementApi = ElementApi,
+    TOptions extends ElementOptions = ElementOptions,
+> = {
+    api: TApi;
+    opts: TOptions;
+};
+
+export type CardElementInstance = ElementsInstance<ElementsApi, CardElementOptions>;
+export type CardFieldsElementInstance = ElementsInstance<ElementsApi, CardFieldsElementOptions>;
+export type ApplePayElementInstance = ElementsInstance<ElementsApi, AltPaymentOptions>;
+export type FlowElementInstance = ElementsInstance<FlowApi, FlowOptions>;
 
 type ProviderStatus = 'cpp:idle' | 'cpp:initialising' | 'cpp:ready' | 'cpp:error';
 export type HookState = 'el:idle' | 'el:creating' | 'el:mounting' | 'el:ready' | 'el:error';
@@ -38,37 +56,9 @@ const CityPayContext = createContext<CityPayContextShape | null>(null);
 export type CityPayProviderProps = PropsWithChildren<{
     pubKey?: string;
     createServerIntent?: () => Promise<PaymentIntentSession>;
-    middleware?: {
-        /**
-         * Middleware route for attaching a payment method or token.
-         */
-        attach?: string;
-
-        /**
-         * Middleware route for confirming a payment intent.
-         */
-        confirm?: string;
-
-        /**
-         * Middleware route for authorising a payment intent.
-         * Strongly recommended to always provide this.
-         */
-        authorise?: string;
-
-        /**
-         * Middleware route for verifying the authorisation
-         * of a payment intent.
-         * Strongly recommended to always provide this.
-         */
-        verifyAuth?: string;
-    };
+    middleware?: MiddlewareConfig;
     // payButtonConfig?: PayButtonConfig;    // optional → lazy-init supported
 }>;
-
-export type ElementsInstance = {
-    api: ElementsApi;
-    opts: CardElementOptions | CardFieldsElementOptions | AltPaymentOptions | FlowOptions;
-}
 
 function initPreconnect() {
     const ORIGIN = 'https://dev.citypay.local:3001';

@@ -21,6 +21,7 @@ export function FlowDemoProvider({
         <CityPayProvider
             {...providerProps}
             middleware={{
+                authorise: '/api/auth',
                 verifyAuth: '/api/verify-auth',
             }}
         >
@@ -32,9 +33,6 @@ export function FlowDemoProvider({
                     options={{
                         language: 'en',
                         width: '100%',
-                        showDefaultCardOption: true,
-                        defaultCardChecked: false,
-                        defaultCardSelected: false,
                     }}
                 />
             </FlowElementProvider>

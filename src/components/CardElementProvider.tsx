@@ -1,10 +1,10 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
+import {CardElementInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
 import {CardElementOptions} from '@citypay/sdk';
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 
 export type CardElementContextShape = {
-    getElement: () => ElementsInstance | null;
-    ensureElement: (opts: CardElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
+    getElement: () => CardElementInstance | null;
+    ensureElement: (opts: CardElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<CardElementInstance>
 }
 
 const CardElementContext = createContext<CardElementContextShape | null>(null);
@@ -14,7 +14,7 @@ export function CardElementProvider({id, children}: PropsWithChildren<{id: strin
     const elements = useElements()
     const elementInstances = useElementInstances()
 
-    const elementInstance = useRef<ElementsInstance | null>(null);
+    const elementInstance = useRef<CardElementInstance | null>(null);
 
     /**
      * Ensure a card element is mounted and ready.
@@ -27,17 +27,12 @@ export function CardElementProvider({id, children}: PropsWithChildren<{id: strin
         // if (existing) return existing;
 
         // Create the form and push to the current refs..
-        const stableOpts = {
-            ...opts,
-            targetElement: opts.element,
-        }
-
         h('el:creating');
-        const elementsApi = elements.cardElement(stableOpts);
+        const elementsApi = elements.cardElement(opts);
         await elementsApi.init()
         await elementsApi.awaitReady()
         h("el:ready");
-        const ref = {api: elementsApi, opts: stableOpts};
+        const ref: CardElementInstance = {api: elementsApi, opts};
         elementInstances.set(id, ref)
         elementInstance.current = ref
         return ref;

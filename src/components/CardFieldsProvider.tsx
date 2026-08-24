@@ -1,10 +1,10 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
+import {CardFieldsElementInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
 import {CardFieldsElementOptions} from "@citypay/sdk"
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 
 export type CardFieldsContextShape = {
-    getElement: () => ElementsInstance | null;
-    ensureElement: (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
+    getElement: () => CardFieldsElementInstance | null;
+    ensureElement: (opts: CardFieldsElementOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<CardFieldsElementInstance>
 }
 
 const CardFieldsContext = createContext<CardFieldsContextShape | null>(null);
@@ -14,7 +14,7 @@ export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string
     const elements = useElements()
     const elementInstances = useElementInstances()
 
-    const elementInstance = useRef<ElementsInstance | null>(null);
+    const elementInstance = useRef<CardFieldsElementInstance | null>(null);
 
     /**
      * Ensure a card fields element is mounted and ready.
@@ -34,7 +34,7 @@ export function CardFieldsProvider({id, children}: PropsWithChildren<{id: string
         await elementsApi.awaitReady()
         console.log('>> done')
         h("el:ready");
-        const ref = {api: elementsApi, opts: opts};
+        const ref: CardFieldsElementInstance = {api: elementsApi, opts};
         elementInstances.set(id, ref)
         elementInstance.current = ref
         return ref;

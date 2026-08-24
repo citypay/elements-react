@@ -1,11 +1,11 @@
-import {ElementsInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
+import {ApplePayElementInstance, HookState, useElementInstances, useElements} from "@/components/CityPayProvider";
 import {createContext, Dispatch, PropsWithChildren, SetStateAction, useContext, useMemo, useRef} from "react";
 import {AltPaymentOptions} from "@citypay/sdk";
 
 type ApplepayElementContextShape = {
     identifier: string
-    getElement: () => ElementsInstance | null;
-    ensureElement: (opts: AltPaymentOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ElementsInstance>
+    getElement: () => ApplePayElementInstance | null;
+    ensureElement: (opts: AltPaymentOptions, h: Dispatch<SetStateAction<HookState>>) => Promise<ApplePayElementInstance>
 }
 
 const ApplepayElementContext = createContext<ApplepayElementContextShape | null>(null);
@@ -15,9 +15,9 @@ export function ApplepayElementProvider({id, children}: PropsWithChildren<{id: s
     const elements = useElements()
     const elementInstances = useElementInstances()
 
-    const elementInstance = useRef<ElementsInstance | null>(null);
+    const elementInstance = useRef<ApplePayElementInstance | null>(null);
 
-    const inFlight = useRef<Map<string, Promise<ElementsInstance>>>(new Map());
+    const inFlight = useRef<Map<string, Promise<ApplePayElementInstance>>>(new Map());
 
     /**
      * Ensure an Applepay element is mounted and ready.
@@ -29,28 +29,17 @@ export function ApplepayElementProvider({id, children}: PropsWithChildren<{id: s
 
         if (elementInstance.current) return elementInstance.current;
 
-        const existInRegistry = elementInstances.get(id);
-        if (existInRegistry) {
-            elementInstance.current = existInRegistry;
-            return existInRegistry;
-        }
-
         const pending = inFlight.current.get(id);
         if (pending) return pending;
 
         // Create the form and push to the current refs..
-        const stableOpts = {
-            ...opts,
-            targetElement: opts.element,
-        }
-
         const p = (async () => {
             h('el:creating');
-            const elementsApi = elements.applePay(id, stableOpts)
+            const elementsApi = elements.applePay(opts)
             await elementsApi.init()
             await elementsApi.awaitReady()
             h("el:ready");
-            const ref = {api: elementsApi, opts: stableOpts};
+            const ref: ApplePayElementInstance = {api: elementsApi, opts};
             elementInstances.set(id, ref)
             elementInstance.current = ref;
             return ref;

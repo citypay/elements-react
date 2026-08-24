@@ -1,4 +1,5 @@
 import type {ComponentProps} from 'react';
+import type {FormLayoutName} from '@citypay/sdk';
 import type {CityPayProvider} from '@/components/CityPayProvider';
 
 export type SharedProviderProps = Pick<
@@ -8,14 +9,7 @@ export type SharedProviderProps = Pick<
 
 export type FlowType = 'verify' | 'payment';
 
-export type WidgetLayout =
-    | 'stack'
-    | 'stack-compact'
-    | 'row-minimal'
-    | 'row-compact'
-    | 'row'
-    | 'column-compact'
-    | 'column';
+export type WidgetLayout = FormLayoutName;
 
 export type PaymentMethodId =
     | 'credit-card'

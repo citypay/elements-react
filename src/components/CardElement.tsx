@@ -7,7 +7,7 @@ import {useElementsStatus} from "@/components/CityPayProvider";
 
 export type CardElementProps = {
     elementId?: string;
-    options?: Omit<CardElementOptions, 'id' | 'element'>;
+    options?: Omit<CardElementOptions, 'identifier' | 'element'>;
     visible?: boolean;
 } & CpeFormHandlers;
 
