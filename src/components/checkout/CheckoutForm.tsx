@@ -6,6 +6,7 @@ import {CardFields} from '@/components/CardFields';
 import {ApplepayElement} from '@/components/ApplepayElement';
 import {CardForm} from '@/app/FieldsCardForm';
 import {flowTypeDescriptions, flowTypes, widgetLayoutOptions} from '@/components/checkout/data';
+import {CHECKOUT_CURRENCY, CHECKOUT_TOTAL_MINOR_UNITS} from '@/components/checkout/constants';
 import {FlowDemoProvider} from '@/components/checkout/FlowDemoProvider';
 import {
     DeliverySection,
@@ -120,7 +121,13 @@ export function CheckoutForm({paymentSession, flowProviderProps}: Props) {
 
                         {paymentMethod.id === 'apple' && (
                             <ApplepayElement
-                                options={{element: 'applePayDiv', total: {amount: 1, label: 'GBP'}}}
+                                options={{
+                                    element: 'applePayDiv',
+                                    total: {
+                                        amount: CHECKOUT_TOTAL_MINOR_UNITS,
+                                        label: CHECKOUT_CURRENCY,
+                                    },
+                                }}
                                 onAuthoriseEnd={handleApplePayAuthoriseEnd}
                             />
                         )}

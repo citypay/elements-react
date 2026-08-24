@@ -1,9 +1,13 @@
-import {NextResponse} from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import {
     CardOnFileBehaviours,
     CityPay,
     ConsentCaptureModes,
 } from "@citypay/sdk";
+import {
+    CHECKOUT_CURRENCY,
+    CHECKOUT_TOTAL_MINOR_UNITS,
+} from "@/components/checkout/constants";
 
 function futureUtcDateOnly(daysFromToday: number): Date {
     const date = new Date();
@@ -14,7 +18,27 @@ function futureUtcDateOnly(daysFromToday: number): Date {
     return date;
 }
 
-export async function POST() {
+type IntentMode = 'card-payment' | 'flow-payment' | 'verify';
+
+export async function POST(request: NextRequest) {
+
+    const body: unknown = await request.json().catch(() => null);
+    const requestedMode = body && typeof body === 'object' && 'mode' in body
+        ? (body as {mode?: unknown}).mode
+        : undefined;
+
+    if (
+        requestedMode !== undefined
+        && requestedMode !== 'card-payment'
+        && requestedMode !== 'flow-payment'
+        && requestedMode !== 'verify'
+    ) {
+        return NextResponse.json({error: "Invalid payment intent mode"}, {status: 400});
+    }
+
+    const mode: IntentMode = requestedMode ?? 'card-payment';
+    const isVerification = mode === 'verify';
+    const includesStoredCardDetails = mode !== 'card-payment';
 
     const clientId = process.env.CITYPAY_CLIENT_ID
     const licenceKey = process.env.CITYPAY_LICENCE_KEY
@@ -29,20 +53,11 @@ export async function POST() {
     })
 
     try {
-        const nextDate = futureUtcDateOnly(30);
-        const endDate = futureUtcDateOnly(365);
         const result = await citypay.paymentIntents.create({
             merchantid: Number(mid),
-            // Demo-only account. Production integrations should use the authenticated customer's stable account id.
-            accountId: `demo-account-${crypto.randomUUID()}`,
-            amount: 0,
-            currency: "GBP",
+            amount: isVerification ? 0 : CHECKOUT_TOTAL_MINOR_UNITS,
+            currency: CHECKOUT_CURRENCY,
             identifier: `cart-id-${crypto.randomUUID()}`,
-            cardHolderAccount: {
-                storeCard: true,
-                consentCaptureMode: ConsentCaptureModes.CityPayOptIn,
-                cardOnFileBehaviour: CardOnFileBehaviours.SetDefault,
-            },
             billTo: {
                 title: "Mr",
                 firstname: "N",
@@ -54,15 +69,24 @@ export async function POST() {
                 country: "GB",
                 postcode: "JE3 3QA"
             },
-            recurringIntent: {
-                count: 12,
-                endDate,
-                fixedAmount: true,
-                fixedSchedule: true,
-                intervalDays: 30,
-                nextDate,
-                recurringAmount: 999
-            }
+            ...(includesStoredCardDetails ? {
+                // Demo-only account. Production integrations should use the authenticated customer's stable account id.
+                accountId: `demo-account-${crypto.randomUUID()}`,
+                cardHolderAccount: {
+                    storeCard: true,
+                    consentCaptureMode: ConsentCaptureModes.CityPayOptIn,
+                    cardOnFileBehaviour: CardOnFileBehaviours.SetDefault,
+                },
+                recurringIntent: {
+                    count: 12,
+                    endDate: futureUtcDateOnly(365),
+                    fixedAmount: true,
+                    fixedSchedule: true,
+                    intervalDays: 30,
+                    nextDate: futureUtcDateOnly(30),
+                    recurringAmount: 999
+                }
+            } : {})
         }, {
             // idempotencyKey: "unique-idempotency-key"
         })

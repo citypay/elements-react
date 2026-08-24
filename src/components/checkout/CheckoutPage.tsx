@@ -20,8 +20,7 @@ export function CheckoutPage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                amount: 0,
-                currency: 'GBP',
+                mode: 'card-payment',
             }),
         }).then(async (response) => {
             if (response.status !== 200) {

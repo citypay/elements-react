@@ -3,6 +3,7 @@
 import {ChevronDownIcon} from '@heroicons/react/16/solid';
 import {CheckCircleIcon, TrashIcon} from '@heroicons/react/20/solid';
 import {deliveryMethods, paymentMethods, products} from '@/components/checkout/data';
+import {CHECKOUT_CURRENCY, CHECKOUT_TOTAL_MINOR_UNITS} from '@/components/checkout/constants';
 import type {PaymentMethod, PaymentMethodId} from '@/components/checkout/types';
 
 type SelectOption = {
@@ -150,6 +151,11 @@ export function PaymentStatus({paymentComplete, paymentError}: PaymentStatusProp
 }
 
 export function OrderSummary({formDisabled}: OrderSummaryProps) {
+    const formattedTotal = new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: CHECKOUT_CURRENCY,
+    }).format(CHECKOUT_TOTAL_MINOR_UNITS / 100);
+
     return (
         <div className="mt-10 lg:mt-0">
             <h2 className="text-lg font-medium text-gray-900">Order summary</h2>
@@ -232,7 +238,7 @@ export function OrderSummary({formDisabled}: OrderSummaryProps) {
                     </div>
                     <div className="flex items-center justify-between border-t border-gray-200 pt-6">
                         <dt className="text-base font-medium">Total</dt>
-                        <dd className="text-base font-medium text-gray-900">£75.52</dd>
+                        <dd className="text-base font-medium text-gray-900">{formattedTotal}</dd>
                     </div>
                 </dl>
 

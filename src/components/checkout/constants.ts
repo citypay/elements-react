@@ -1,0 +1,3 @@
+export const CHECKOUT_CURRENCY = 'GBP';
+export const CHECKOUT_TOTAL_MINOR_UNITS = 7_552;
+
