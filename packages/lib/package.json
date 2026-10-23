@@ -60,7 +60,7 @@
     "react-dom": ">=18 <20"
   },
   "dependencies": {
-    "@citypay/sdk": "^2.1.7"
+    "@citypay/sdk": "2.1.8"
   },
   "devDependencies": {
     "@types/node": "^20",

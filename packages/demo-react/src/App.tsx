@@ -11,6 +11,7 @@ import {
     CityPayProvider,
     FieldReferences,
     FormLayoutName,
+    GooglepayElement,
     PaymentIntentSession,
     useElements,
     useElementInstances,
@@ -597,7 +598,7 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                             <FieldsCardForm refs={fieldsRefs}/>
                             <CardFields
                               fieldReferences={fieldsRefs}
-                              showCardIcon={true}
+                              showCardIcon={false}
                               onChange={(c: any) => {
 
                                   function updateField(
@@ -705,7 +706,47 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                 }
                             }}
                             />
-                        {paymentMethod.id === 'google' && <p>Google TODO</p>}
+                        <GooglepayElement
+                            visible={paymentMethod.id === 'google'}
+                            identifier={'googlepay'}
+                            total={{
+                                amount: 1,
+                                label: 'GBP'
+                            }}
+                            environment={'TEST'}
+                            merchantId={'***'}
+                            merchantName={'myTestMerchant'}
+                            onCancel={() => notify('error', 'GooglePay Canceled', 'User cancelled')}
+                            onTokeniseEnd={async () => {
+                                const api = elementsInstances.get('googlepay')?.api
+                                if (!api) throw new Error('No api returned')
+
+                                await api.attach({})
+
+                                const confirmResult = await api.confirm({});
+
+                                if (confirmResult.status == 'error') {
+                                    throw new Error(confirmResult.error.message);
+                                } else if (confirmResult.status == 'requires_authorisation') {
+                                    // now present for authorisation
+                                    ServerConnection.authorise(paymentSession.paymentIntentId)
+                                    .then(async (resp) => {
+
+                                        if (resp.authorised) {
+                                            ServerConnection.verifyAuth(paymentSession.paymentIntentId)
+                                            .then(v => {
+
+                                                if (v && v.status === 'success') {
+                                                    notify('success', 'Auth succeeded', `Payment authorised on Googlepay. Verified auth: ${v.auth.authcode}`)
+                                                } else {
+                                                    notify('error', 'Auth failed', `Payment authorisation failed`)
+                                                }
+                                            })
+                                        }
+                                    })
+                                }
+                            }}
+                        />
                     </div>
                     <OrderSummary formDisabled={formDisabled || isSubmitting}/>
                 </form>
@@ -718,17 +759,22 @@ export default function App() {
 
     const [paymentSession, setPaymentSession] = useState<PaymentIntentSession | undefined>()
     const [sessionError, setSessionError] = useState<string | undefined>()
+    const hasCreatedSession = useRef(false)
 
     useEffect(() => {
+        if (hasCreatedSession.current) return
+        hasCreatedSession.current = true
+
         ServerConnection.checkServerConnection()
-            .then(() => {
-                return ServerConnection.getPaymentSession()
-            }).then(session => {
+            .then(() => ServerConnection.getPaymentSession())
+            .then(session => {
+                console.log('::>> PIID ', session)
                 setPaymentSession(session)
-            }).catch(ex => {
+            })
+            .catch(ex => {
                 setSessionError(formatError(ex))
             })
-    }, []);
+    }, [])
 
     if (sessionError) {
         return (
