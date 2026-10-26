@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
 const reset = "\x1b[0m";
@@ -20,20 +18,11 @@ const rootDir = resolve(scriptDir, "..");
 const commands = {
   install: ["pnpm", ["install", "--config.confirmModulesPurge=false"]],
   buildLibrary: ["pnpm", ["lib:build"]],
-  certs: isWindows
-    ? ["pnpm", ["demo:certs:win"]]
-    : ["pnpm", ["demo:certs:bash"]],
+  certs: ["pnpm", ["demo:certs"]],
   env: isWindows
     ? ["powershell", ["-ExecutionPolicy", "Bypass", "-File", "./setup-env.ps1"]]
     : ["./setup-env.sh", []],
 };
-
-const certificateFiles = [
-  "packages/demo-react/certs/localhost.pem",
-  "packages/demo-react/certs/localhost-key.pem",
-  "packages/demo-server/certs/localhost.pem",
-  "packages/demo-server/certs/localhost-key.pem",
-].map((file) => resolve(rootDir, file));
 
 function printBanner() {
   const white = "\x1b[37m";
@@ -101,40 +90,10 @@ async function runStep(label, command, args, options = {}) {
   console.log();
 }
 
-async function confirm(question, defaultValue = false) {
-  const suffix = defaultValue ? "[Y/n]" : "[y/N]";
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  try {
-    const answer = (await rl.question(`${question} ${suffix}: `)).trim().toLowerCase();
-    if (!answer) {
-      return defaultValue;
-    }
-    return answer === "y" || answer === "yes";
-  } finally {
-    rl.close();
-  }
-}
-
 async function configureCertificates() {
-  const allCertificatesExist = certificateFiles.every((file) => existsSync(file));
-
-  console.log(`${yellow}>${reset} ${bold}Generating trusted local certificates${reset}`);
-
-  if (allCertificatesExist) {
-    const regenerate = await confirm("Local certificates already exist. Regenerate them?", false);
-    if (!regenerate) {
-      console.log(`${green}[OK]${reset} Keeping existing local certificates`);
-      console.log();
-      return;
-    }
-  }
-
+  console.log(`${yellow}>${reset} ${bold}Checking trusted local certificates${reset}`);
   await run(...commands.certs);
-  console.log(`${green}[OK]${reset} Generating trusted local certificates`);
+  console.log(`${green}[OK]${reset} Checking trusted local certificates`);
   console.log();
 }
 
@@ -173,7 +132,7 @@ async function main() {
     console.log();
     console.log(`${bold}Next steps:${reset}`);
     console.log("  pnpm demo:dev");
-    console.log("  Open: https://localhost:3000");
+    console.log("  Open: https://dev.citypay.local:3000");
     console.log();
   } catch (error) {
     console.error();

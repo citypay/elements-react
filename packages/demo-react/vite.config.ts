@@ -15,7 +15,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: "localhost",
+    host: "dev.citypay.local",
     port: 3000,
     strictPort: true,
     proxy: {

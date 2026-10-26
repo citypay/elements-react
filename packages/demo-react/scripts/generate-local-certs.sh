@@ -21,13 +21,13 @@ if command -v mkcert >/dev/null 2>&1; then
   echo "Installing local mkcert CA if needed..."
   mkcert -install
 
-  echo "Generating localhost certificate with mkcert..."
+  echo "Generating local demo certificate with mkcert..."
   mkcert \
     -cert-file localhost.pem \
     -key-file localhost-key.pem \
-    localhost 127.0.0.1 ::1
+    dev.citypay.local localhost 127.0.0.1 ::1
 elif command -v openssl >/dev/null 2>&1; then
-  echo "mkcert is not installed; generating a self-signed localhost certificate with OpenSSL..."
+  echo "mkcert is not installed; generating a self-signed local demo certificate with OpenSSL..."
 
   cat > localhost-openssl.cnf <<'EOF'
 [req]
@@ -38,7 +38,7 @@ distinguished_name = dn
 x509_extensions = v3_req
 
 [dn]
-CN = localhost
+CN = dev.citypay.local
 
 [v3_req]
 basicConstraints = CA:FALSE
@@ -47,7 +47,8 @@ extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = localhost
+DNS.1 = dev.citypay.local
+DNS.2 = localhost
 IP.1 = 127.0.0.1
 IP.2 = ::1
 EOF

@@ -4,9 +4,11 @@
   "private": false,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
+    "predev": "node ../../scripts/ensure-local-certs.mjs demo-react",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host localhost --port 3000",
+    "prepreview": "node ../../scripts/ensure-local-certs.mjs demo-react",
+    "preview": "vite preview --host dev.citypay.local --port 3000",
     "certs:win": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-local-certs.ps1",
     "certs:bash": "bash ./scripts/generate-local-certs.sh",
     "lint": "eslint"

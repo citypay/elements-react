@@ -518,8 +518,12 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
 
             const tokenResult = await api.tokenise();
 
+            if (tokenResult.status === 'error') {
+                throw new Error(tokenResult.error.message);
+            }
+
             await api.attach({
-                token: tokenResult.token,
+                token: tokenResult.data.token,
                 select: true,
                 intentId: paymentSession.paymentIntentId
             });
@@ -714,14 +718,16 @@ export function FormExample({paymentSession}: { paymentSession: PaymentIntentSes
                                 label: 'GBP'
                             }}
                             environment={'TEST'}
-                            merchantId={'***'}
+                            merchantId={'BCR2DN4TXKZL3HB7'}
                             merchantName={'myTestMerchant'}
                             onCancel={() => notify('error', 'GooglePay Canceled', 'User cancelled')}
                             onTokeniseEnd={async () => {
                                 const api = elementsInstances.get('googlepay')?.api
                                 if (!api) throw new Error('No api returned')
 
-                                await api.attach({})
+                                const attachResult = await api.attach({})
+
+                                console.log("Attach result", attachResult)
 
                                 const confirmResult = await api.confirm({});
 

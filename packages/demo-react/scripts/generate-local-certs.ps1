@@ -33,11 +33,11 @@ $TempDir = New-Item -ItemType Directory -Path ([System.IO.Path]::GetTempPath()) 
 try {
     Push-Location $TempDir.FullName
 
-    Write-Host "Generating localhost certificate..."
+    Write-Host "Generating local demo certificate..."
     mkcert `
         -cert-file localhost.pem `
         -key-file localhost-key.pem `
-        localhost 127.0.0.1 ::1
+        dev.citypay.local localhost 127.0.0.1 ::1
 
     Pop-Location
 

@@ -23,7 +23,7 @@ From the repository root:
 
 3. Open:
    ```text
-   https://localhost:3000
+   https://dev.citypay.local:3000
    ```
 
 If `pnpm` is not available yet, enable it through Corepack first:
@@ -65,13 +65,14 @@ scripts.
    pnpm citypay-init
    ```
 
-   This installs workspace dependencies, builds the local `@citypay/elements-react` package, generates local HTTPS
+   This installs workspace dependencies, builds the local `@citypay/elements-react` package, checks local HTTPS
    certificates for both the React app and secure server, then prompts for the CityPay credentials used to create the
    package `.env.local` files. The initializer detects Windows vs macOS/Linux and runs the appropriate certificate and
    environment setup commands.
 
-   You can rerun `pnpm citypay-init` safely. Existing certificates are kept unless you choose to regenerate them, and
-   existing environment values are shown as defaults. The licence key is displayed only as a masked value.
+   You can rerun `pnpm citypay-init` safely. Missing, invalid, or soon-to-expire certificates are regenerated
+   automatically, and existing environment values are shown as defaults. The licence key is displayed only as a masked
+   value.
 
 **Note:** Payment flows require HTTPS throughout, and that HTTPS certificates are derived from a trusted root CA.
 The certificate scripts use `mkcert` when it is available. If `mkcert` is not installed, they fall back to OpenSSL and
@@ -82,7 +83,7 @@ generate self-signed certificates, which your browser may require you to manuall
    pnpm demo:dev
    ```
 
-4. Open https://localhost:3000.
+4. Open https://dev.citypay.local:3000.
 
 ### Manual setup commands
 
@@ -90,7 +91,7 @@ If you prefer to run the init steps separately, use:
 
 ```bash
 pnpm install
-pnpm demo:certs:bash
+pnpm demo:certs
 ./setup-env.sh
 ```
 
@@ -98,7 +99,7 @@ On Windows PowerShell, use:
 
 ```powershell
 pnpm install
-pnpm demo:certs:win
+pnpm demo:certs
 Set-ExecutionPolicy -Scope Process Bypass
 .\setup-env.ps1
 ```
@@ -118,7 +119,7 @@ than CodeArtifact.
 
 ## Running the Demo
 
-From the repository root, run ```pnpm demo:dev``` to start the demo application. It is usually available at https://localhost:3000
+From the repository root, run ```pnpm demo:dev``` to start the demo application. It is usually available at https://dev.citypay.local:3000
 
 ## Notes
 
@@ -206,9 +207,14 @@ is your default package manager elsewhere.
 
 ### HTTPS & Certificate Issues
 
+`pnpm demo:dev`, each package's development/start script, and `pnpm citypay-init` check certificates automatically.
+Certificates are regenerated when missing, invalid, for the wrong hostname, or within 30 days of expiry. Set
+`CITYPAY_CERT_RENEWAL_DAYS` to a non-negative number to change the renewal window. The `demo:certs:bash` and
+`demo:certs:win` scripts remain available when you need to force regeneration.
+
 #### Browser shows “Not Secure” or blocks requests
 
-- Ensure `pnpm demo:certs:*` was run successfully
+- Ensure `pnpm demo:certs` was run successfully
 - Restart your browser after certificate installation
 - Ensure mkcert root CA is installed and trusted
 
@@ -229,7 +235,7 @@ Install mkcert:
 
 ### Runtime / Server Issues
 
-#### App does not start on https://localhost:3000
+#### App does not start on https://dev.citypay.local:3000
 
 - Check if port 3000 is already in use:
   ```bash

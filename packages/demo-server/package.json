@@ -4,7 +4,9 @@
   "description": "An express server that can be used as a demo backend for any Citypay Elements demo projects",
   "main": "src/index.js",
   "scripts": {
+    "prestart": "node ../../scripts/ensure-local-certs.mjs demo-server",
     "start": "node src/index.js",
+    "predev": "node ../../scripts/ensure-local-certs.mjs demo-server",
     "dev": "nodemon src/index.js",
     "certs:win": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-local-certs.ps1",
     "certs:bash": "bash ./scripts/generate-local-certs.sh"
