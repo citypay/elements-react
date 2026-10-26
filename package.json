@@ -2,9 +2,9 @@
   "name": "@citypay/elements-react-root",
   "version": "1.0.7-next",
   "private": false,
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@10.0.0",
   "engines": {
-    "node": ">=22.13"
+    "node": "22.x"
   },
   "scripts": {
     "citypay-init": "node scripts/citypay-init.mjs",

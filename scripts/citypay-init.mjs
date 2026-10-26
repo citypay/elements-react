@@ -110,7 +110,7 @@ async function checkPrerequisites() {
     await run("pnpm", ["--version"]);
   } catch (error) {
     throw new Error(
-      `pnpm is required. Enable it with: corepack enable && corepack prepare pnpm@11.9.0 --activate. ${error.message}`,
+      `pnpm is required. Enable it with: corepack enable && corepack prepare pnpm@10.0.0 --activate. ${error.message}`,
     );
   }
 

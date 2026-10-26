@@ -30,7 +30,7 @@ If `pnpm` is not available yet, enable it through Corepack first:
 
 ```bash
 corepack enable
-corepack prepare pnpm@11.9.0 --activate
+corepack prepare pnpm@10.0.0 --activate
 ```
 
 ## What is inside
@@ -43,8 +43,8 @@ corepack prepare pnpm@11.9.0 --activate
 ## Prerequisites
 
 - React 18+ (this repo uses React 19)
-- Node 22.13+ for pnpm 11
-- pnpm v11+ (this repo is configured and tested as a pnpm workspace)
+- Node 22.13+
+- pnpm v10+ (this repo is configured and tested as a pnpm workspace)
 - A CityPay account with API credentials
 
 ## Detailed Setup
@@ -57,7 +57,7 @@ scripts.
 1. From the repository root, enable pnpm through Corepack if pnpm is not already available:
    ```bash
    corepack enable
-   corepack prepare pnpm@11.9.0 --activate
+   corepack prepare pnpm@10.0.0 --activate
    ```
 
 2. Initialise the local demo:
@@ -186,7 +186,7 @@ VITE_EX_CP_PUBLIC_KEY=pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   pnpm -v
   ```
 
-- Recommended: pnpm v11+
+- Recommended: pnpm v10+
 
 - Clear cache and retry:
   ```bash
@@ -311,7 +311,7 @@ Fix:
 
 #### Vite build or dev server errors
 
-- Ensure Node version is compatible (Node 22.13+ is recommended for pnpm 11)
+- Ensure Node version is compatible (Node 22.13+ is recommended)
 - Rebuild the local library and demo:
   ```bash
   pnpm demo:build

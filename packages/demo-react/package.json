@@ -2,7 +2,7 @@
   "name": "@citypay/elements-react-demo",
   "version": "0.1.0",
   "private": false,
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@10.0.0",
   "scripts": {
     "predev": "node ../../scripts/ensure-local-certs.mjs demo-react",
     "dev": "vite",
