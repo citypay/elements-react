@@ -1,6 +1,6 @@
 {
   "name": "@citypay/elements-react",
-  "version": "1.0.8",
+  "version": "1.0.9-next",
   "description": "React components and hooks for CityPay Elements.",
   "private": false,
   "license": "MIT",
