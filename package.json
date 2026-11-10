@@ -1,12 +1,16 @@
 {
   "name": "@citypay/elements-react-root",
   "version": "1.0.8-next",
-  "private": false,
+  "private": true,
   "packageManager": "pnpm@11.15.1",
   "engines": {
     "node": ">=22.13"
   },
   "scripts": {
+    "version": "node scripts/sync-library-version.mjs && git add packages/lib/package.json",
+    "release:check": "node scripts/check-release.mjs",
+    "release:test": "node --test scripts/release.test.mjs",
+    "release:draft": "node scripts/draft-release.mjs",
     "citypay-init": "node scripts/citypay-init.mjs",
     "lib:build": "pnpm --filter '@citypay/elements-react' build",
     "lib:lint": "pnpm --filter '@citypay/elements-react' lint",
@@ -16,7 +20,7 @@
     "demo:dev": "pnpm lib:build && pnpm --parallel --filter '@citypay/elements-react-demo' --filter '@citypay/elements-demo-server' dev",
     "demo:build": "pnpm lib:build && pnpm --filter '@citypay/elements-react-demo' build",
     "demo:lint": "pnpm --filter '@citypay/elements-react-demo' lint",
-    "verify": "pnpm lib:build && pnpm lib:lint && pnpm demo:build && pnpm demo:lint && pnpm lib:pack:dry-run"
+    "verify": "pnpm release:check && pnpm release:test && pnpm lib:build && pnpm lib:lint && pnpm demo:build && pnpm demo:lint && pnpm lib:pack:dry-run"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",

@@ -1,6 +1,6 @@
 {
   "name": "@citypay/elements-react",
-  "version": "1.0.7-next",
+  "version": "1.0.8-next",
   "description": "React components and hooks for CityPay Elements.",
   "private": false,
   "license": "MIT",
@@ -26,7 +26,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.15.1",
   "scripts": {
     "clean": "rimraf dist dist-types",
     "build": "tsup",
