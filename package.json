@@ -10,7 +10,6 @@
     "version": "node scripts/sync-library-version.mjs && git add packages/lib/package.json",
     "release:check": "node scripts/check-release.mjs",
     "release:test": "node --test scripts/release.test.mjs",
-    "release:draft": "node scripts/draft-release.mjs",
     "citypay-init": "node scripts/citypay-init.mjs",
     "lib:build": "pnpm --filter '@citypay/elements-react' build",
     "lib:lint": "pnpm --filter '@citypay/elements-react' lint",
