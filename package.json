@@ -17,9 +17,10 @@
     "demo:certs:bash": "pnpm -r certs:bash",
     "demo:certs:win": "pnpm -r certs:win",
     "demo:dev": "pnpm lib:build && pnpm --parallel --filter '@citypay/elements-react-demo' --filter '@citypay/elements-demo-server' dev",
+    "demo:server:test": "pnpm --filter '@citypay/elements-demo-server' test",
     "demo:build": "pnpm lib:build && pnpm --filter '@citypay/elements-react-demo' build",
     "demo:lint": "pnpm --filter '@citypay/elements-react-demo' lint",
-    "verify": "pnpm release:check && pnpm release:test && pnpm lib:build && pnpm lib:lint && pnpm demo:build && pnpm demo:lint && pnpm lib:pack:dry-run"
+    "verify": "pnpm release:check && pnpm release:test && pnpm lib:build && pnpm lib:lint && pnpm demo:server:test && pnpm demo:build && pnpm demo:lint && pnpm lib:pack:dry-run"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",

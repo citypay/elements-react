@@ -120,6 +120,35 @@ than CodeArtifact.
 
 From the repository root, run ```pnpm demo:dev``` to start the demo application. It is usually available at https://localhost:3000
 
+The browser calls `/api` on its own origin. In local development, Vite forwards those requests to the HTTPS Express
+server on port 3005. Both processes must be running for local checkout to work.
+
+## Hosting the sandbox demo on Vercel
+
+The Vercel project must use the **repository root** as its Root Directory. The root `vercel.json` sets the Vite preset,
+`pnpm install --frozen-lockfile`, `pnpm demo:build` and `packages/demo-react/dist` as the output. Set the project's Node.js
+version to 22. The four JavaScript files in the root `api/` directory deploy as functions alongside the frontend. Do not add a
+catch-all SPA rewrite over `/api`.
+
+Set these variables for both Preview and Production deployments:
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `EX_CP_CLIENT_ID` | Vercel functions | Sandbox client ID |
+| `EX_CP_LICENSE_KEY` | Vercel functions | Sandbox licence key |
+| `EX_CP_MID` | Vercel functions | Sandbox merchant ID |
+| `VITE_EX_CP_PUBLIC_KEY` | Vite build | Browser public key |
+
+The first three values are server-side secrets. Never prefix them with `VITE_` or place them in browser code. The backend
+uses the CityPay SDK with `sandbox: true`. API responses use `Cache-Control: no-store`.
+
+For a preview deployment, check Deployment Resources for the four functions. Open `/api/ping` and expect `pong`. Check
+that `/api/payment-session` returns a session, then stop your local servers and load the preview checkout. Browser Network
+requests should target the preview's `/api` paths, with no `localhost` request or local-network prompt. Complete a sandbox
+card checkout, including authorisation verification. Check wallet methods only where their registration and device
+prerequisites are available. Record the preview URL and sanitised results before deploying from `main` and checking the
+custom domain. If the hosted checks fail, restore the previous Vercel deployment.
+
 ## Notes
 
 - All payments will be sent to the CityPay sandbox API servers. No payments will be taken.
