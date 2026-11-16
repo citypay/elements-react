@@ -17,7 +17,7 @@ import {
     useElementInstances,
     VerifyAuthResponse
 } from "@citypay/elements-react"
-import {VERIFY_AUTH_PATH} from "@/server-conn/config";
+import {VERIFY_AUTH_URL} from "@/server-conn/config";
 import {ServerConnection} from "@/server-conn/serverConnection";
 
 const products = [
@@ -768,7 +768,6 @@ export default function App() {
         ServerConnection.checkServerConnection()
             .then(() => ServerConnection.getPaymentSession())
             .then(session => {
-                console.log('::>> PIID ', session)
                 setPaymentSession(session)
             })
             .catch(ex => {
@@ -803,7 +802,7 @@ export default function App() {
                              return paymentSession;
                          }}
                          middleware={{
-                            verifyAuth: VERIFY_AUTH_PATH
+                            verifyAuth: VERIFY_AUTH_URL
                          }}>
                 <FormExample paymentSession={paymentSession} />
         </CityPayProvider>

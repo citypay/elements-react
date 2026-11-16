@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "test": "node --test src/handlers.test.js",
     "certs:win": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-local-certs.ps1",
     "certs:bash": "bash ./scripts/generate-local-certs.sh"
   },

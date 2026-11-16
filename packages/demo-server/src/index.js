@@ -1,109 +1,45 @@
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const https = require('https');
+const fs = require('node:fs');
+const path = require('node:path');
+const https = require('node:https');
 const express = require('express');
-const { randomUUID } = require('crypto');
-const { CityPay } = require("@citypay/sdk")
-
-const cfg = require("./config")
+const { CityPay } = require('@citypay/sdk');
+const cfg = require('./config');
+const { createHandlers } = require('./handlers');
 
 const app = express();
+const handlers = createHandlers(
+  new CityPay(cfg.CP_CLIENT_ID, cfg.CP_LICENSE_KEY, { sandbox: true }),
+  cfg.CP_MID
+);
 
-// Middleware
 app.use(express.json());
-app.use(cors({
-  origin: cfg.CORS_REGEX
-}));
-
-const cityPay = new CityPay(cfg.CP_CLIENT_ID, cfg.CP_LICENSE_KEY, {sandbox: true})
-
-const handleError = (res, label, err, status = 500) => {
-  console.error(`${label}:`, err);
-
-  return res.status(status).json({
-    error: label,
-    message: err?.message || 'Unknown error'
-  });
-};
-
-// Routes
-app.get("/ping", (req, res) => {
-  res.send("pong");
+app.use(cors({ origin: cfg.CORS_REGEX }));
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
 });
 
-app.get('/payment-session', (req, res) => {
-  cityPay.paymentIntents.create({
-    merchantid: Number(cfg.CP_MID),
-    amount: 1001,
-    currency: 'GBP',
-    identifier: `cart-${randomUUID()}`,
-    billTo: {
-      title: 'Mr',
-      firstname: 'N',
-      lastname: 'Person',
-      email: 'n.person@example.com',
-      address1: '123 Example Street',
-      address2: 'Example City',
-      address3: 'Example County',
-      country: 'GB',
-      postcode: 'JE3 3QA'
-    }
-  }, {})
-    .then((response) => {
-      res.json(response);
-    })
-    .catch((err) => {
-      handleError(res, 'Failed to create payment session', err);
-    });
-});
+app.get('/ping', handlers.ping);
+app.get('/payment-session', handlers.paymentSession);
+app.post('/authorise', handlers.authorise);
+app.post('/verify-auth', handlers.verifyAuth);
 
-app.post('/authorise', (req, res) => {
-  const { intentId } = req.body;
+function methodNotAllowed(allowedMethod) {
+  return (req, res) => {
+    res.setHeader('Allow', allowedMethod);
+    res.status(405).json({ error: 'Method not allowed' });
+  };
+}
 
-  if (!intentId) {
-    return res.status(400).json({ error: 'Missing intentId' });
-  }
+app.all('/ping', methodNotAllowed('GET'));
+app.all('/payment-session', methodNotAllowed('GET'));
+app.all('/authorise', methodNotAllowed('POST'));
+app.all('/verify-auth', methodNotAllowed('POST'));
 
-  cityPay.paymentIntents.authorise({
-    payment_intent_id: intentId
-  })
-    .then((response) => {
-      res.json(response);
-    })
-    .catch((err) => {
-      handleError(res, 'Failed to authorise payment', err);
-    });
-});
-
-app.post('/verify-auth', (req, res) => {
-  const { intentId } = req.body;
-
-  if (!intentId) {
-    return res.status(400).json({
-      status: 'error',
-      error: 'Missing intentId'
-    });
-  }
-
-  cityPay.paymentIntents.verifyAuthorised({
-    unmask_fields: [],
-    payment_intent_id: intentId
-  })
-    .then((response) => {
-      res.json(response);
-    })
-    .catch((err) => {
-      handleError(res, 'Failed to verify authorisation', err);
-    });
-});
-
-// Start server
 const key = fs.readFileSync(path.resolve(__dirname, '../certs/localhost-key.pem'));
 const cert = fs.readFileSync(path.resolve(__dirname, '../certs/localhost.pem'));
 
-https
-  .createServer({ key, cert }, app)
-  .listen(cfg.PORT, cfg.HOSTNAME, () => {
-    console.log(`[cp-demo] Backend listening on https://${cfg.HOSTNAME}:${cfg.PORT}`)
-  });
+https.createServer({ key, cert }, app).listen(cfg.PORT, cfg.HOSTNAME, () => {
+  console.log(`[cp-demo] Backend listening on https://${cfg.HOSTNAME}:${cfg.PORT}`);
+});

@@ -19,10 +19,11 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     proxy: {
-      "/verify-auth": {
+      "/api": {
         target: "https://localhost:3005",
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api(?=\/|$)/, ""),
       },
     },
     https: hasHttpsCerts
